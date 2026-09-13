@@ -56,7 +56,7 @@
 .dxfEntityInspectorActions{grid-template-columns:1fr 1fr}
 
 
-/* Build 12 — FacilityManager / WebDXF responsibility split */
+/* Build 13 — PieniPlan naming/link refinement */
 .facmapSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}.facmapStat{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel-soft,rgba(127,127,127,.06))}.facmapStat b{display:block;font-size:20px;margin-top:3px}.facmapList{display:flex;flex-direction:column;gap:7px;max-height:300px;overflow:auto;margin-top:10px}.facmapRow{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:9px;padding:9px 10px}.facmapRow .tag{font-size:11px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:2px 7px;white-space:nowrap}.facmapRow.updated .tag{color:var(--warning,#9a6700)}.facmapRow.added .tag{color:var(--accent,#2563eb)}.facmapRow.missing .tag{color:var(--danger,#c0392b)}.facmapRow.unchanged{opacity:.62}.facmapMeta{font-size:12px;color:var(--muted);margin-top:3px}.toolLinkStatus{margin-top:8px;line-height:1.45}.mapSourceBadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
 @media(max-width:700px){.facmapSummary{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
@@ -324,7 +324,7 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
 
 <div id="app">
   <header class="topbar">
-    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.12.0 · Build 12</div></div>
+    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.12.1 · Build 13</div></div>
     <div class="locationCompact"><select id="mobileBuilding"></select><select id="mobileFloor"></select></div>
     <div class="topSpacer"></div>
     <div class="topMeta">
@@ -377,8 +377,8 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
           </div>
 
           <div class="sideTabPane" data-side-pane="manage">
-            <div class="panelSection adminOnly hidden"><div class="panelTitle">도면 업데이트</div><div class="manageNote">시설관리에서는 완성된 도면만 사용합니다. 도면 제작·트레이싱·공간 정의는 WebDXF에서 완료한 뒤 FACMAP으로 가져옵니다.</div><button class="btn fullBtn" id="facmapImportBtn"><svg class="mi sm"><use href="#mi-layers"/></svg>완성 도면 가져오기 (.facmap)</button><button class="hidden" id="drawingManageBtn" aria-hidden="true" tabindex="-1"></button><button class="hidden" id="editModeBtn" aria-hidden="true" tabindex="-1"></button></div>
-            <div class="panelSection"><div class="panelTitle">도면 제작 도구</div><div class="settingsButtonGrid"><button class="btn" id="webDxfBtn">WebDXF</button><button class="btn" id="dwg2dxfBtn">DWG → DXF</button></div><div class="smallText muted toolLinkStatus" id="webDxfStatus">WebDXF 연결 정보를 확인 중입니다.</div></div>
+            <div class="panelSection adminOnly hidden"><div class="panelTitle">도면 업데이트</div><div class="manageNote">시설관리에서는 완성된 도면만 사용합니다. 도면 제작·트레이싱·공간 정의는 PieniPlan에서 완료한 뒤 FACMAP으로 가져옵니다.</div><button class="btn fullBtn" id="facmapImportBtn"><svg class="mi sm"><use href="#mi-layers"/></svg>완성 도면 가져오기 (.facmap)</button><button class="hidden" id="drawingManageBtn" aria-hidden="true" tabindex="-1"></button><button class="hidden" id="editModeBtn" aria-hidden="true" tabindex="-1"></button></div>
+            <div class="panelSection"><div class="panelTitle">도면 제작 도구</div><div class="settingsButtonGrid"><button class="btn" id="pieniPlanBtn">PieniPlan 열기</button></div><div class="smallText muted toolLinkStatus" id="pieniPlanStatus">도면 제작·트레이싱·공간 정의는 PieniPlan에서 진행합니다.</div></div>
             <div class="panelSection adminOnly hidden"><div class="panelTitle">관리</div><div class="adminTools"><button class="btn" id="constructionBtn"><svg class="mi sm"><use href="#mi-add"/></svg>공사 이력 등록</button><button class="btn" id="historyBtn"><svg class="mi sm"><use href="#mi-history"/></svg>변경 이력</button><button class="btn accountManageOnly hidden" id="accountManageBtn"><svg class="mi sm"><use href="#mi-settings"/></svg>시스템 관리</button></div></div>
             <div id="manageLockedMessage" class="manageNote">관리자 인증 후 도면 업데이트와 관리 기능을 사용할 수 있습니다.</div>
           </div>
@@ -414,7 +414,7 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
 <script src="facmap-core.js"></script>
 <script>
 'use strict';
-const VERSION='0.12.0', BUILD=12;
+const VERSION='0.12.1', BUILD=13;
 const FACDB_SCHEMA='0.1.0';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const encText=new TextEncoder(), decText=new TextDecoder();
@@ -849,7 +849,7 @@ function isMobileLayout(){return resolveLayout(layoutPreference)==='mobile'&&!st
 function syncLayoutControls(){const a=$('#layoutSelect'),b=$('#mobileLayoutSelect');if(a)a.value=layoutPreference;if(b)b.value=layoutPreference}
 function applyLayout(pref,{persist=true,announce=false}={}){layoutPreference=['auto','mobile','desktop'].includes(pref)?pref:'auto';const actual=resolveLayout(layoutPreference);document.documentElement.dataset.layout=actual;document.documentElement.dataset.layoutPreference=layoutPreference;try{if(persist)localStorage.setItem(LAYOUT_KEY,layoutPreference)}catch{}syncLayoutControls();if(actual==='mobile'&&state.editMode&&!state.studioActive)setEditMode(false);closeMobileMenu();renderDetails();if(announce)toast(layoutPreference==='auto'?'화면 크기에 맞춰 레이아웃을 자동으로 전환합니다.':layoutPreference==='mobile'?'모바일 레이아웃으로 전환했습니다.':'데스크톱 레이아웃으로 전환했습니다.')}
 
-async function ensureDrawingStudioAddon(){throw new Error('도면 편집 기능은 WebDXF로 분리되었습니다.')} 
+async function ensureDrawingStudioAddon(){throw new Error('도면 편집 기능은 PieniPlan으로 분리되었습니다.')} 
 
 function updateStudioTitle(){const b=currentBuilding(),f=currentFloor();const t=$('#studioTitle'),s=$('#studioSubtitle');if(t)t.textContent=`${b?.name||''} · ${f?.label||''}`;if(s)s.textContent=state.editMode?'도면 편집 중':'도면 관리'}
 async function enterDrawingStudio(mode='manage'){
@@ -924,7 +924,7 @@ const _renderAllBuild7Base=renderAll;renderAll=function(){_renderAllBuild7Base()
 //           official latest-DB marker, PWA home-screen guidance, and public-safe site config.
 Object.assign(state,{latestDb:null,latestDbState:'unknown',latestDbError:'',siteConfig:null,installPrompt:null,lastExportedRevision:null});
 
-const DEFAULT_SITE_CONFIG={schemaVersion:1,productName:'시설관리',productEnglishName:'FacilityManager',developerName:'Bak2ya',developerContactUrl:'https://github.com/Bak2ya',projectUrl:'',deploymentModel:'public-app-local-facdb',webDxfUrl:'',dwg2dxfUrl:'https://bak2ya.github.io/DWGtoDXF/'};
+const DEFAULT_SITE_CONFIG={schemaVersion:1,productName:'시설관리',productEnglishName:'FacilityManager',developerName:'Bak2ya',developerContactUrl:'https://github.com/Bak2ya',projectUrl:'https://github.com/Bak2ya/FacilityManager',deploymentModel:'public-app-local-facdb',pieniPlanUrl:'https://bak2ya.github.io/PieniPlan/'};
 function safeHttpUrl(v){try{const u=new URL(String(v||''),location.href);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
 async function fetchLocalJson(path){const sep=path.includes('?')?'&':'?';const r=await fetch(`${path}${sep}_=${Date.now()}`,{cache:'no-store',credentials:'same-origin'});if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);return r.json()}
 async function loadSiteConfig(){try{state.siteConfig={...DEFAULT_SITE_CONFIG,...await fetchLocalJson('site-config.json')}}catch(e){state.siteConfig={...DEFAULT_SITE_CONFIG};console.warn('site-config.json load failed',e)}applySiteConfig()}
@@ -1312,15 +1312,14 @@ ensureCadCanvas();scheduleCadCanvasDraw();
 
 
 // ----------------------------------------------------------------------
-// Build 12 — FacilityManager/WebDXF separation baseline + FACMAP bridge.
+// Build 12 — FacilityManager/PieniPlan separation baseline + FACMAP bridge.
 Object.assign(state,{pendingFacmap:null});
 const FACMAP_FILE_ACCEPT='.facmap,application/json';
-function currentMapSourceLabel(){const i=currentFloor()?.mapInfo;if(!i)return '기존 FACDB 도면';const app=i.sourceApp?.name||'WebDXF';return `${app}${i.sourceName?' · '+i.sourceName:''}`}
+function currentMapSourceLabel(){const i=currentFloor()?.mapInfo;if(!i)return '기존 FACDB 도면';const app=i.sourceApp?.name||'PieniPlan';return `${app}${i.sourceName?' · '+i.sourceName:''}`}
 function updateToolLinks(){
-  const c=state.siteConfig||DEFAULT_SITE_CONFIG,web=safeHttpUrl(c.webDxfUrl||''),dwg=safeHttpUrl(c.dwg2dxfUrl||'https://bak2ya.github.io/DWGtoDXF/'),st=$('#webDxfStatus');
-  if(st)st.textContent=web?'WebDXF에서 도면을 제작·트레이싱한 뒤 FACMAP으로 가져올 수 있습니다.':'WebDXF는 별도 프로젝트로 분리되었습니다. 주소가 확정되면 site-config.json의 webDxfUrl만 넣으면 연결됩니다.';
-  const wb=$('#webDxfBtn');if(wb){wb.disabled=!web;wb.textContent=web?'WebDXF 열기':'WebDXF · 준비 중';wb.onclick=()=>{if(web)window.open(web,'_blank','noopener,noreferrer')}}
-  const db=$('#dwg2dxfBtn');if(db){db.onclick=()=>window.open(dwg,'_blank','noopener,noreferrer')}
+  const c=state.siteConfig||DEFAULT_SITE_CONFIG,pieni=safeHttpUrl(c.pieniPlanUrl||'https://bak2ya.github.io/PieniPlan/'),st=$('#pieniPlanStatus');
+  if(st)st.textContent='도면 제작·트레이싱·공간 정의는 PieniPlan에서 진행합니다.';
+  const pb=$('#pieniPlanBtn');if(pb){pb.disabled=!pieni;pb.textContent=pieni?'PieniPlan 열기':'PieniPlan · 준비 중';pb.onclick=()=>{if(pieni)window.open(pieni,'_blank','noopener,noreferrer')}}
 }
 const _applySiteConfigBuild12Base=applySiteConfig;applySiteConfig=function(){_applySiteConfigBuild12Base();updateToolLinks()};
 function openFacmapPicker(){if(state.role!=='admin'){toast('완성 도면을 가져오려면 관리자 인증이 필요합니다.');return}const i=$('#facmapFileInput');if(i){i.accept=FACMAP_FILE_ACCEPT;i.click()}}
@@ -1334,11 +1333,11 @@ const facmapBtn=$('#facmapImportBtn');if(facmapBtn)facmapBtn.onclick=openFacmapP
 const _renderRoomSvgBuild12Base=renderRoomSvg;renderRoomSvg=function(r){if(r?.mapMissing)return'';return _renderRoomSvgBuild12Base(r)};
 const _detailHtmlBuild12Base=detailHtml;detailHtml=function(r){const html=_detailHtmlBuild12Base(r);if(!r?.mapMissing)return html;return html.replace('<div class="detailBody">','<div class="detailBody"><div class="manageNote" style="margin-bottom:12px">이 공간은 새 도면에서 사라졌습니다. 기존 시설관리 데이터는 보존 중입니다.</div>')};
 // FacilityManager no longer exposes drawing creation/editing. Legacy code remains unreachable for FACDB backward compatibility.
-enterDrawingStudio=async function(){toast('도면 제작·편집은 WebDXF에서 진행해 주세요.')};setEditMode=function(){state.editMode=false;renderEditorState();toast('도면 구조 편집은 WebDXF에서 진행해 주세요.')};
-function drawingShortcutHelpHtml(){return `<div class="manageCard"><b>시설관리 도면 조작</b><div class="manageNote">시설관리에서는 완성된 도면을 조회합니다. 도면 제작·트레이싱·벽/공간 구조 수정은 WebDXF에서 진행합니다.</div></div><dl class="drawingShortcutGrid"><dt>드래그</dt><dd>도면 이동</dd><dt><span class="keycap">Wheel</span></dt><dd>커서 위치 기준 확대·축소</dd><dt>핀치</dt><dd>터치/트랙패드 확대·축소</dd><dt><span class="keycap">F</span></dt><dd>전체 도면 맞춤</dd><dt>호실 클릭/탭</dt><dd>시설관리 정보 열기</dd></dl>`}
-function openUsageHelp(){openModal('사용 방법',`<div class="manageCard"><b>기본 조회</b><div class="manageNote">건물과 층을 선택하고 도면에서 공간을 선택하면 시설관리 정보를 확인할 수 있습니다. 검색은 호실·부서·설비를 한 번에 찾습니다.</div></div><div class="manageCard"><b>도면 구조</b><div class="manageNote">FacilityManager는 완성된 도면을 사용합니다. 도면 제작, PDF·이미지 트레이싱, DXF 편집, 벽·문·창문·공간 정의는 WebDXF의 역할입니다.</div></div><div class="manageCard"><b>도면 업데이트</b><div class="manageNote">WebDXF에서 내보낸 FACMAP을 관리자 메뉴에서 가져오면 기존 도면과 비교합니다. 바뀐 공간만 갱신하고 시설관리 업무 데이터는 유지합니다.</div></div><div class="manageCard"><b>시설관리</b><div class="manageNote">호실 정보, 부서·배정, 출입 정보, 소방·설비, 공사 이력과 같은 업무 데이터는 FacilityManager에서 관리합니다.</div></div><div class="manageCard"><b>데이터</b><div class="manageNote">실제 시설 데이터는 FACDB로 별도 배포되며 GitHub Pages에는 프로그램 코드와 최신 DB 기준정보만 둡니다.</div></div>`,`<button class="btn primary usageHelpClose">확인</button>`);$('.usageHelpClose').onclick=closeModal}
-const _renderMobileMenuBuild12Base=renderMobileMenu;renderMobileMenu=function(){_renderMobileMenuBuild12Base();const old=$('#mobileDrawingManage');if(old){old.textContent='완성 도면 가져오기 (.facmap)';old.onclick=()=>{closeMobileMenu();openFacmapPicker()}}const host=$('#mobileMenu');if(host){host.insertAdjacentHTML('beforeend',`<details class="mobileCategory"><summary>도면 제작 도구</summary><div class="mobileCategoryBody"><div class="panelSection"><div class="manageNote">도면 제작·트레이싱·공간 정의는 WebDXF에서 진행합니다.</div><button class="btn fullBtn" id="mobileWebDxf">WebDXF</button><button class="btn fullBtn" style="margin-top:6px" id="mobileDwg2Dxf">DWG → DXF</button></div></div></details>`);const c=state.siteConfig||DEFAULT_SITE_CONFIG,web=safeHttpUrl(c.webDxfUrl||''),dwg=safeHttpUrl(c.dwg2dxfUrl||'https://bak2ya.github.io/DWGtoDXF/'),wb=$('#mobileWebDxf'),db=$('#mobileDwg2Dxf');if(wb){wb.disabled=!web;wb.textContent=web?'WebDXF 열기':'WebDXF · 준비 중';wb.onclick=()=>{if(web){closeMobileMenu();window.open(web,'_blank','noopener,noreferrer')}}}if(db)db.onclick=()=>{closeMobileMenu();window.open(dwg,'_blank','noopener,noreferrer')}}};
-// Rebind static controls after the Build 12 overrides.
+enterDrawingStudio=async function(){toast('도면 제작·편집은 PieniPlan에서 진행해 주세요.')};setEditMode=function(){state.editMode=false;renderEditorState();toast('도면 구조 편집은 PieniPlan에서 진행해 주세요.')};
+function drawingShortcutHelpHtml(){return `<div class="manageCard"><b>시설관리 도면 조작</b><div class="manageNote">시설관리에서는 완성된 도면을 조회합니다. 도면 제작·트레이싱·벽/공간 구조 수정은 PieniPlan에서 진행합니다.</div></div><dl class="drawingShortcutGrid"><dt>드래그</dt><dd>도면 이동</dd><dt><span class="keycap">Wheel</span></dt><dd>커서 위치 기준 확대·축소</dd><dt>핀치</dt><dd>터치/트랙패드 확대·축소</dd><dt><span class="keycap">F</span></dt><dd>전체 도면 맞춤</dd><dt>호실 클릭/탭</dt><dd>시설관리 정보 열기</dd></dl>`}
+function openUsageHelp(){openModal('사용 방법',`<div class="manageCard"><b>기본 조회</b><div class="manageNote">건물과 층을 선택하고 도면에서 공간을 선택하면 시설관리 정보를 확인할 수 있습니다. 검색은 호실·부서·설비를 한 번에 찾습니다.</div></div><div class="manageCard"><b>도면 구조</b><div class="manageNote">FacilityManager는 완성된 도면을 사용합니다. 도면 제작, PDF·이미지 트레이싱, DXF 편집, 벽·문·창문·공간 정의는 PieniPlan의 역할입니다.</div></div><div class="manageCard"><b>도면 업데이트</b><div class="manageNote">PieniPlan에서 내보낸 FACMAP을 관리자 메뉴에서 가져오면 기존 도면과 비교합니다. 바뀐 공간만 갱신하고 시설관리 업무 데이터는 유지합니다.</div></div><div class="manageCard"><b>시설관리</b><div class="manageNote">호실 정보, 부서·배정, 출입 정보, 소방·설비, 공사 이력과 같은 업무 데이터는 FacilityManager에서 관리합니다.</div></div><div class="manageCard"><b>데이터</b><div class="manageNote">실제 시설 데이터는 FACDB로 별도 배포되며 GitHub Pages에는 프로그램 코드와 최신 DB 기준정보만 둡니다.</div></div>`,`<button class="btn primary usageHelpClose">확인</button>`);$('.usageHelpClose').onclick=closeModal}
+const _renderMobileMenuBuild12Base=renderMobileMenu;renderMobileMenu=function(){_renderMobileMenuBuild12Base();const old=$('#mobileDrawingManage');if(old){old.textContent='완성 도면 가져오기 (.facmap)';old.onclick=()=>{closeMobileMenu();openFacmapPicker()}}const host=$('#mobileMenu');if(host){host.insertAdjacentHTML('beforeend',`<details class="mobileCategory"><summary>도면 제작 도구</summary><div class="mobileCategoryBody"><div class="panelSection"><div class="manageNote">도면 제작·트레이싱·공간 정의는 PieniPlan에서 진행합니다.</div><button class="btn fullBtn" id="mobilePieniPlan">PieniPlan 열기</button></div></div></details>`);const c=state.siteConfig||DEFAULT_SITE_CONFIG,pieni=safeHttpUrl(c.pieniPlanUrl||'https://bak2ya.github.io/PieniPlan/'),pb=$('#mobilePieniPlan');if(pb){pb.disabled=!pieni;pb.textContent=pieni?'PieniPlan 열기':'PieniPlan · 준비 중';pb.onclick=()=>{if(pieni){closeMobileMenu();window.open(pieni,'_blank','noopener,noreferrer')}}}}};
+// Rebind static controls after the Build 13 naming/link overrides.
 const shortcutBtn=$('#settingsShortcutBtn');if(shortcutBtn)shortcutBtn.onclick=openDrawingShortcutHelp;
 window.addEventListener('keydown',e=>{const tag=e.target?.tagName;if(['INPUT','TEXTAREA','SELECT'].includes(tag))return;if(e.key?.toLowerCase()==='f'&&!state.studioActive&&!state.dxfWizard&&!$('#modalHost')?.innerHTML){e.preventDefault();fitView()}},true);
 updateToolLinks();

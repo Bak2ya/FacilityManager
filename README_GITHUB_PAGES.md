@@ -1,43 +1,36 @@
-# FacilityManager v0.9.0 · Build 9 — GitHub Pages 배포
+# FacilityManager v0.10.0 · Build 10 — GitHub Pages 배포
 
 ## 업로드
 
-`FacilityManager_v0.9.0_Build9_GITHUB_PAGES.zip`의 **내용물 전체**를 GitHub Pages 저장소 루트에 올립니다.
+`FacilityManager_v0.10.0_Build10_GITHUB_PAGES.zip`의 **내용물 전체**를 GitHub 저장소 루트에 올립니다.
 
-필수 실행 파일:
-- `index.html`
-- `drawing-studio.js`
-- `workers/dxf-worker.js`
-- `manifest.webmanifest`
-- `icons/`
-- `site-config.json`
-- `latest-db.json`
-- `robots.txt`
+GitHub Pages 설정:
 
-`index.html`만 올리면 Drawing Studio / DXF Worker가 동작하지 않습니다.
+- Source: `Deploy from a branch`
+- Branch: `main`
+- Folder: `/(root)`
+- HTTPS 사용 권장
 
-## Build 9 확인 포인트
+예상 주소:
 
-Build 9는 도면 작업 UI와 DXF 미리보기 수정이 중심입니다.
-- DXF 선/폴리라인 표시 수정
-- DXF Wheel Zoom / Pan
-- 문자 LOD 자동 표시
-- 기본/CAD형/트랙패드형 조작 설정
-- 도면 조작 단축키/우클릭 메뉴
-- 현재 도면 초기화
+`https://<사용자명>.github.io/FacilityManager/`
 
-브라우저가 기존 파일을 캐시했다면 강력 새로고침 후 확인합니다.
+## 절대 올리지 않을 것
 
-## 운영 파일 주의
+- 실제 운영 FACDB
+- 운영 암호/암호화 키
+- 교내 잠금정보가 포함된 파일
+- 실데이터 Excel/CSV/PDF
 
-학교에서 이미 `site-config.json`과 `latest-db.json`을 실제 운영 값으로 사용 중이라면 새 패키지 업로드 때 무심코 예제 파일로 덮어쓰지 않도록 주의합니다.
+## Build 10 확인 포인트
 
-FACDB는 GitHub에 업로드하지 않습니다.
+1. 데스크톱 우측 패널이 조회/표시/관리/설정 4탭으로 나뉘는지
+2. 모바일 햄버거 메뉴가 같은 4분류로 정리되는지
+3. DB 배포 필요 배지를 눌러 상세 경고가 다시 열리는지
+4. DXF 레이어 체크를 바꿔도 목록 스크롤이 유지되는지
+5. 모두 표시/숨김/반전/추천이 정상 동작하는지
+6. DXF 선/문자 등을 클릭했을 때 레이어가 표시되는지
+7. 선택한 레이어의 단독 보기 및 가져오기 제외가 정상인지
+8. 창의관 실제 DXF에서 Zoom/Pan/레이어/영역 선택이 유지되는지
 
-## latest-db.json
-
-`latest-db.json`에는 공식 배포 DB의 `databaseId + revision`과 공개 가능한 기준 정보만 둡니다. FACDB 배포 후 시스템 관리자가 생성한 파일로 교체합니다.
-
-## 검색 노출
-
-기본 배포본은 `noindex`와 `robots.txt`를 포함합니다. 이는 검색 색인을 줄이는 요청이며 접근 인증 기능은 아닙니다.
+`latest-db.json`에는 실제 시설 데이터가 아니라 공식 FACDB의 `databaseId + revision` 기준만 둡니다.

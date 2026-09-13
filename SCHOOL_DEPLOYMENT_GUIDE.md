@@ -84,7 +84,7 @@ GitHub Pages 주소를 외부에 적극적으로 공유할 필요는 없습니�
   "productEnglishName": "FacilityManager",
   "developerName": "Bak2ya",
   "developerContactUrl": "https://github.com/Bak2ya",
-  "projectUrl": "",
+  "projectUrl": "https://github.com/Bak2ya/FacilityManager",
   "deploymentModel": "public-app-local-facdb"
 }
 ```
@@ -113,4 +113,23 @@ GitHub Pages 주소를 외부에 적극적으로 공유할 필요는 없습니�
 
 ## 10. 라이선스
 
-다른 기관에 정식으로 공개·재배포하기 전에는 프로젝트의 오픈소스 라이선스를 별도로 확정해야 합니다. 현재 Build 8에서는 임의로 라이선스를 선택하지 않습니다.
+다른 기관에 정식으로 공개·재배포하기 전에는 프로젝트의 오픈소스 라이선스를 별도로 확정해야 합니다. 현재 Build 9에서는 임의로 라이선스를 선택하지 않습니다.
+
+## 11. 도면 작업 권장 조작
+
+Drawing Studio와 DXF 가져오기 화면은 데스크톱 사용을 기준으로 합니다.
+
+- 휠: 확대·축소
+- 가운데 버튼 드래그: 이동
+- Space + 드래그: 이동
+- F: 전체 도면 맞춤
+- +/-: 확대·축소
+- Cmd/Ctrl+S: 저장
+- Cmd/Ctrl+Z: 실행 취소
+- Cmd/Ctrl+Shift+Z: 다시 실행
+- Esc: 작업 취소/선택 해제
+- Delete/Backspace: 선택 항목 삭제
+
+조작 방식은 `기본 / CAD형 / 트랙패드형`으로 바꿀 수 있으며 해당 설정은 각 기기의 브라우저에만 저장됩니다.
+
+DXF 문자가 전체 보기에서 겹치는 경우 `문자 자동`을 유지하면 확대 수준에 따라 표시량을 자동 조절합니다.

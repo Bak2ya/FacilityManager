@@ -5,5 +5,7 @@
   "developerName": "Bak2ya",
   "developerContactUrl": "https://github.com/Bak2ya",
   "projectUrl": "https://github.com/Bak2ya/FacilityManager",
-  "deploymentModel": "public-app-local-facdb"
+  "deploymentModel": "public-app-local-facdb",
+  "webDxfUrl": "",
+  "dwg2dxfUrl": "https://bak2ya.github.io/DWGtoDXF/"
 }

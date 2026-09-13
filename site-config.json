@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "productName": "시설관리",
+  "productEnglishName": "FacilityManager",
+  "developerName": "Bak2ya",
+  "developerContactUrl": "https://github.com/Bak2ya",
+  "projectUrl": "",
+  "deploymentModel": "public-app-local-facdb"
+}

@@ -297,6 +297,50 @@ html[data-theme="black"] .dbFreshnessStatus,html[data-theme="black"] .mobileDbFr
 html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[data-theme="black"] .sideNavTab.active{background:#000;border:1px solid #363636;box-shadow:none}
 </style>
 
+
+<style id="build14Styles">
+/* Build 14 — canvas-first FacilityManager workspace */
+:root{--top:0px;--right:366px}
+.topbar{display:none!important}
+html[data-layout="desktop"] #app,html[data-layout="desktop"] #app.panel-collapsed{height:100%;display:grid;grid-template-rows:minmax(0,1fr);grid-template-areas:"map side";grid-template-columns:minmax(0,1fr) var(--right);min-width:760px;transition:grid-template-columns .2s ease}
+html[data-layout="desktop"] #app.panel-collapsed{grid-template-columns:minmax(0,1fr) 0}
+html[data-layout="desktop"] .mapArea{grid-area:map;inset:auto;position:relative}
+html[data-layout="desktop"] .rightPanel{display:block!important;grid-area:side;position:relative;width:auto;min-width:0;overflow:hidden}
+#app.panel-collapsed .rightPanel{border-left:0;visibility:hidden;pointer-events:none}
+.sideTopRow,.collapsedRail,.mapHUD,.mapHUD.right,.mapHint,.mobileSheet,.mobileFloatingControls,.mobileMenu,.mobileMenuBackdrop{display:none!important}
+.sideControls{padding-top:12px}
+.workspaceLocation{position:absolute;z-index:32;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);max-width:min(70vw,520px)}
+.locationPill{height:38px;max-width:100%;display:flex;align-items:center;gap:5px;padding:0 13px;border:1px solid color-mix(in srgb,var(--floating-border) 78%,transparent);border-radius:999px;background:color-mix(in srgb,var(--floating-bg) 88%,transparent);color:var(--floating-text);box-shadow:0 8px 24px rgba(0,0,0,.10);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);font-size:12px;white-space:nowrap}
+.locationPill>span,.locationPill>strong{overflow:hidden;text-overflow:ellipsis}.locationPill>strong{font-weight:800}.locationPill .mi{width:15px;height:15px;transform:rotate(90deg);opacity:.7}.locationDot{opacity:.5}
+.floorQuickMenu{position:absolute;left:50%;top:46px;transform:translateX(-50%);width:max-content;min-width:150px;max-width:min(82vw,300px);padding:6px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--panel) 94%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.floorQuickMenu button{width:100%;min-height:34px;padding:7px 10px;border-radius:9px;text-align:left;font-weight:650}.floorQuickMenu button:hover,.floorQuickMenu button.active{background:var(--accentSoft);color:var(--accentStrong)}
+.floatingActionCluster{position:absolute;z-index:31;top:max(10px,env(safe-area-inset-top));right:12px;display:flex;gap:6px;transition:right .2s ease}
+.glassIconBtn{width:38px;height:38px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--floating-border) 78%,transparent);border-radius:13px;background:color-mix(in srgb,var(--floating-bg) 88%,transparent);color:var(--floating-text);box-shadow:0 8px 24px rgba(0,0,0,.09);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);transition:transform .12s ease,background .12s ease}
+.glassIconBtn:hover{background:var(--floating-bg);transform:translateY(-1px)}.glassIconBtn.authActive{background:var(--accentSoft);color:var(--accentStrong);border-color:var(--accent)}
+.panelEdgeHandle{position:fixed;z-index:96;right:var(--right);top:50%;transform:translateY(-50%);width:25px;height:58px;display:grid;place-items:center;border:1px solid var(--line);border-right:0;border-radius:16px 0 0 16px;background:color-mix(in srgb,var(--floating-bg) 92%,transparent);color:var(--floating-text);box-shadow:-5px 7px 18px rgba(0,0,0,.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:right .2s ease,transform .12s ease}
+#app.panel-collapsed .panelEdgeHandle{right:0}.panelEdgeHandle:hover{transform:translateY(-50%) translateX(-1px)}.panelEdgeHandle.hasDirty::after{content:"";position:absolute;right:3px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 2px var(--panel)}
+.zoomHUD{display:flex!important;left:12px!important;bottom:12px!important;gap:0!important;padding:3px;border:1px solid color-mix(in srgb,var(--floating-border) 78%,transparent);border-radius:15px;background:color-mix(in srgb,var(--floating-bg) 86%,transparent);box-shadow:0 8px 24px rgba(0,0,0,.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.zoomHUD .iconBtn{width:36px;height:36px;border:0!important;background:transparent!important;border-radius:11px!important;box-shadow:none!important}.zoomHUD .iconBtn:hover{background:var(--hover-bg)!important}
+.zoomTransientHud{position:absolute;z-index:30;left:50%;bottom:14px;transform:translate(-50%,8px);min-width:60px;text-align:center;padding:7px 10px;border-radius:999px;background:color-mix(in srgb,var(--floating-bg) 90%,transparent);border:1px solid var(--floating-border);color:var(--floating-text);font-size:12px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.08);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;backdrop-filter:blur(14px)}
+.zoomTransientHud.show{opacity:1;transform:translate(-50%,0)}
+.roomQuickPopover{position:fixed;z-index:95;width:min(280px,calc(100vw - 20px));padding:12px;border:1px solid var(--line);border-radius:15px;background:color-mix(in srgb,var(--panel) 96%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.roomQuickPopover .quickTitle{font-size:14px;font-weight:850;margin-bottom:3px}.roomQuickPopover .quickSub{font-size:12px;color:var(--muted);line-height:1.45}.roomQuickPopover .quickMeta{display:grid;grid-template-columns:70px 1fr;gap:5px 9px;font-size:12px;margin:10px 0}.roomQuickPopover .quickMeta span:nth-child(odd){color:var(--muted)}.roomQuickPopover .quickActions{display:flex;justify-content:flex-end;margin-top:10px}
+html[data-layout="mobile"] #app,html[data-layout="mobile"] #app.panel-collapsed{position:fixed;inset:0;display:block!important;min-width:0}
+html[data-layout="mobile"] .mapArea{position:fixed;inset:0;background:var(--drawing-bg)}
+html[data-layout="mobile"] .mapCanvas{position:absolute;inset:0!important}
+html[data-layout="mobile"] .rightPanel{display:block!important;position:fixed;z-index:90;top:0;right:0;bottom:0;width:min(92vw,366px);background:var(--panel);border-left:1px solid var(--line);transform:translateX(0);transition:transform .2s ease;visibility:visible;pointer-events:auto}
+html[data-layout="mobile"] #app.panel-collapsed .rightPanel{transform:translateX(100%);visibility:hidden;pointer-events:none}
+html[data-layout="mobile"] .panelEdgeHandle{right:min(92vw,366px)}
+html[data-layout="mobile"] #app.panel-collapsed .panelEdgeHandle{right:0}
+html[data-layout="mobile"] .floatingActionCluster{right:10px}
+html[data-layout="mobile"] .workspaceLocation{max-width:62vw}
+html[data-layout="mobile"] .locationPill{height:40px;padding:0 12px;font-size:12px}
+html[data-layout="mobile"] .zoomHUD{display:flex!important;left:max(8px,env(safe-area-inset-left))!important;bottom:max(8px,env(safe-area-inset-bottom))!important}
+html[data-layout="mobile"] .zoomTransientHud{bottom:max(12px,env(safe-area-inset-bottom))}
+html[data-layout="mobile"] .dataOverlay{inset:0!important}
+@media(max-width:560px){.floatingActionCluster{top:auto!important;bottom:max(10px,env(safe-area-inset-bottom));right:10px}.zoomHUD{bottom:max(10px,env(safe-area-inset-bottom))!important}.zoomTransientHud{bottom:58px!important}.workspaceLocation{max-width:78vw}.locationPill{max-width:78vw}.panelEdgeHandle{height:54px}.roomQuickPopover{width:min(300px,calc(100vw - 16px))}}
+</style>
+
 </head>
 
 <body>
@@ -324,7 +368,7 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
 
 <div id="app">
   <header class="topbar">
-    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.12.1 · Build 13</div></div>
+    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.13.0 · Build 14</div></div>
     <div class="locationCompact"><select id="mobileBuilding"></select><select id="mobileFloor"></select></div>
     <div class="topSpacer"></div>
     <div class="topMeta">
@@ -339,6 +383,19 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
   </header>
 
   <main class="mapArea">
+    <div class="workspaceLocation">
+      <button class="locationPill" id="currentLocationPill" aria-haspopup="true" aria-expanded="false" title="같은 건물의 다른 층으로 이동">
+        <span id="currentLocationBuilding">—</span><span class="locationDot">·</span><strong id="currentLocationFloor">—</strong><svg class="mi sm"><use href="#mi-chevron-right"/></svg>
+      </button>
+      <div class="floorQuickMenu hidden" id="floorQuickMenu" role="menu"></div>
+    </div>
+    <div class="floatingActionCluster" aria-label="빠른 도구">
+      <button class="glassIconBtn" id="floatingSearchBtn" aria-label="검색" title="검색"><svg class="mi"><use href="#mi-search"/></svg></button>
+      <button class="glassIconBtn" id="floatingPrintBtn" aria-label="출력" title="출력"><svg class="mi"><use href="#mi-print"/></svg></button>
+      <button class="glassIconBtn" id="floatingSecureBtn" aria-label="잠금정보 확인" title="잠금정보 확인"><svg class="mi"><use id="floatingSecureIcon" href="#mi-lock"/></svg></button>
+    </div>
+    <div class="zoomTransientHud" id="zoomTransientHud" aria-live="polite">100%</div>
+    <div class="roomQuickPopover hidden" id="roomQuickPopover" role="dialog" aria-label="선택 공간 빠른 정보"></div>
     <div class="mobileFloatingControls" id="mobileFloatingControls"><button class="iconBtn" id="mobileSearchFloat" aria-label="검색"><svg class="mi"><use href="#mi-search"/></svg></button><button class="iconBtn" id="mobileMenuFloat" aria-label="메뉴"><svg class="mi"><use href="#mi-menu"/></svg></button></div>
     <div class="mapHUD"><span class="badge muted" id="mapLocationBadge"></span><span class="badge muted" id="zoomBadge">100%</span></div>
     <div class="mapHUD right"><button class="btn small" id="fitBtn"><svg class="mi sm"><use href="#mi-home"/></svg>전체 보기</button></div>
@@ -377,6 +434,7 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
           </div>
 
           <div class="sideTabPane" data-side-pane="manage">
+            <div class="panelSection"><div class="panelTitle">권한</div><div class="settingsButtonGrid"><button class="btn" id="sideAdminBtn"><svg class="mi sm"><use href="#mi-admin"/></svg><span id="sideAdminBtnText">관리자 인증</span></button><button class="btn adminOnly hidden" id="sideSaveBtn"><svg class="mi sm"><use href="#mi-save"/></svg>변경사항 저장</button></div><div class="smallText muted" id="sideAdminStatus" style="margin-top:7px">일반 조회 모드</div></div>
             <div class="panelSection adminOnly hidden"><div class="panelTitle">도면 업데이트</div><div class="manageNote">시설관리에서는 완성된 도면만 사용합니다. 도면 제작·트레이싱·공간 정의는 PieniPlan에서 완료한 뒤 FACMAP으로 가져옵니다.</div><button class="btn fullBtn" id="facmapImportBtn"><svg class="mi sm"><use href="#mi-layers"/></svg>완성 도면 가져오기 (.facmap)</button><button class="hidden" id="drawingManageBtn" aria-hidden="true" tabindex="-1"></button><button class="hidden" id="editModeBtn" aria-hidden="true" tabindex="-1"></button></div>
             <div class="panelSection"><div class="panelTitle">도면 제작 도구</div><div class="settingsButtonGrid"><button class="btn" id="pieniPlanBtn">PieniPlan 열기</button></div><div class="smallText muted toolLinkStatus" id="pieniPlanStatus">도면 제작·트레이싱·공간 정의는 PieniPlan에서 진행합니다.</div></div>
             <div class="panelSection adminOnly hidden"><div class="panelTitle">관리</div><div class="adminTools"><button class="btn" id="constructionBtn"><svg class="mi sm"><use href="#mi-add"/></svg>공사 이력 등록</button><button class="btn" id="historyBtn"><svg class="mi sm"><use href="#mi-history"/></svg>변경 이력</button><button class="btn accountManageOnly hidden" id="accountManageBtn"><svg class="mi sm"><use href="#mi-settings"/></svg>시스템 관리</button></div></div>
@@ -385,8 +443,8 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
 
           <div class="sideTabPane" data-side-pane="settings">
             <div class="panelSection"><div class="panelTitle">화면</div><div class="field compactField"><label>테마</label><select id="themeSelect" class="themeSelect" aria-label="테마"><option value="system">시스템 설정 따름</option><option value="light">라이트</option><option value="dark">다크</option><option value="black">블랙 (OLED)</option></select></div><div class="field compactField"><label>레이아웃</label><select id="layoutSelect" class="themeSelect" aria-label="레이아웃"><option value="auto">자동</option><option value="mobile">모바일</option><option value="desktop">데스크톱</option></select></div></div>
-            <div class="panelSection"><div class="panelTitle">데이터</div><div class="settingsDataStamp"><span>DB 기준일</span><b id="rightDataStamp">—</b></div><div id="dbFreshnessStatus" class="dbFreshnessStatus"><span class="statusDot mutedDot"></span><span>최신 DB 기준 확인 중</span></div><div class="settingsButtonGrid"><button class="btn" id="changeDbBtn">DB 불러오기</button><button class="btn" id="exportDbBtn">FACDB 내보내기</button><button class="btn" id="settingsPrintBtn"><svg class="mi sm"><use href="#mi-print"/></svg>PDF 내보내기</button><button class="btn" id="installAppBtn">홈 화면에 추가</button></div></div>
-            <div class="panelSection"><div class="panelTitle">도움말</div><div class="settingsButtonGrid"><button class="btn" id="usageHelpBtn">사용 방법</button><button class="btn" id="settingsShortcutBtn">도면 조작</button><button class="btn" id="projectViewBtn">GitHub에서 보기</button><button class="btn" id="developerContactBtn">개발자 연락하기</button><button class="btn" id="aboutBtn">정보</button><button class="btn" id="refreshLatestDbBtn">최신 DB 확인</button></div></div>
+            <div class="panelSection"><div class="panelTitle">데이터</div><div class="settingsDataStamp"><span>DB 기준일</span><b id="rightDataStamp">—</b></div><div id="dbFreshnessStatus" class="dbFreshnessStatus"><span class="statusDot mutedDot"></span><span>최신 DB 기준 확인 중</span></div><div class="settingsButtonGrid"><button class="btn" id="changeDbBtn">DB 불러오기</button><button class="btn" id="exportDbBtn">FACDB 내보내기</button><button class="btn" id="settingsPrintBtn"><svg class="mi sm"><use href="#mi-print"/></svg>PDF 내보내기</button><button class="btn" id="refreshLatestDbBtn">최신 DB 확인</button></div></div>
+            <div class="panelSection"><div class="panelTitle">도움말</div><div class="settingsButtonGrid"><button class="btn" id="usageHelpBtn">사용 방법</button><button class="btn" id="settingsShortcutBtn">조작법</button><button class="btn" id="bookmarkBtn">즐겨찾기에 추가</button><button class="btn" id="installAppBtn">홈 화면에 추가</button><button class="btn" id="aboutBtn">정보</button><button class="btn hidden" id="projectViewBtn" tabindex="-1" aria-hidden="true">GitHub에서 보기</button><button class="btn hidden" id="developerContactBtn" tabindex="-1" aria-hidden="true">개발자 연락하기</button></div></div>
           </div>
         </div>
         <div class="detailWrap"><div id="desktopDetail"></div></div>
@@ -394,6 +452,7 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
     </div>
     <div class="collapsedRail"><button class="iconBtn" id="expandPanelBtn" aria-label="패널 펼치기"><svg class="mi"><use href="#mi-chevron-left"/></svg></button></div>
   </aside>
+  <button class="panelEdgeHandle" id="panelEdgeHandle" aria-label="정보 패널 접기" title="정보 패널 접기"><svg class="mi"><use id="panelEdgeHandleIcon" href="#mi-chevron-right"/></svg></button>
 
   <section class="mobileSheet" id="mobileSheet"><div class="mobileGrab"></div><div class="mobileSheetHead" id="mobileSheetHead"><div class="mobileSheetText"><div class="mobileSheetTitle" id="mobileSheetTitle">호실을 선택해 주세요.</div><div class="mobileSheetSub" id="mobileSheetSub">도면에서 호실을 탭하면 정보를 확인할 수 있습니다.</div></div><div style="flex:1"></div><button class="iconBtn" style="width:32px;height:32px" id="mobileSheetToggle" aria-label="상세정보 펼치기"><svg class="mi" id="mobileSheetIcon"><use href="#mi-chevron-left"/></svg></button></div><div class="mobileSheetContent" id="mobileDetail"></div></section>
   <div id="mobileMenuBackdrop" class="mobileMenuBackdrop hidden"></div><div id="mobileMenu" class="mobileMenu hidden"></div>
@@ -414,7 +473,7 @@ html[data-theme="black"] .sideNavTabs{background:#000;border-color:#292929}html[
 <script src="facmap-core.js"></script>
 <script>
 'use strict';
-const VERSION='0.12.1', BUILD=13;
+const VERSION='0.13.0', BUILD=14;
 const FACDB_SCHEMA='0.1.0';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const encText=new TextEncoder(), decText=new TextDecoder();
@@ -924,7 +983,7 @@ const _renderAllBuild7Base=renderAll;renderAll=function(){_renderAllBuild7Base()
 //           official latest-DB marker, PWA home-screen guidance, and public-safe site config.
 Object.assign(state,{latestDb:null,latestDbState:'unknown',latestDbError:'',siteConfig:null,installPrompt:null,lastExportedRevision:null});
 
-const DEFAULT_SITE_CONFIG={schemaVersion:1,productName:'시설관리',productEnglishName:'FacilityManager',developerName:'Bak2ya',developerContactUrl:'https://github.com/Bak2ya',projectUrl:'https://github.com/Bak2ya/FacilityManager',deploymentModel:'public-app-local-facdb',pieniPlanUrl:'https://bak2ya.github.io/PieniPlan/'};
+const DEFAULT_SITE_CONFIG={schemaVersion:1,productName:'시설관리',productEnglishName:'FacilityManager',developerName:'Bak2ya',developerEmail:'creative2ya@gmail.com',developerContactUrl:'mailto:creative2ya@gmail.com',projectUrl:'https://github.com/Bak2ya/FacilityManager',deploymentModel:'public-app-local-facdb',pieniPlanUrl:'https://bak2ya.github.io/PieniPlan/'};
 function safeHttpUrl(v){try{const u=new URL(String(v||''),location.href);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
 async function fetchLocalJson(path){const sep=path.includes('?')?'&':'?';const r=await fetch(`${path}${sep}_=${Date.now()}`,{cache:'no-store',credentials:'same-origin'});if(!r.ok)throw new Error(`${r.status} ${r.statusText}`);return r.json()}
 async function loadSiteConfig(){try{state.siteConfig={...DEFAULT_SITE_CONFIG,...await fetchLocalJson('site-config.json')}}catch(e){state.siteConfig={...DEFAULT_SITE_CONFIG};console.warn('site-config.json load failed',e)}applySiteConfig()}
@@ -1342,6 +1401,57 @@ const shortcutBtn=$('#settingsShortcutBtn');if(shortcutBtn)shortcutBtn.onclick=o
 window.addEventListener('keydown',e=>{const tag=e.target?.tagName;if(['INPUT','TEXTAREA','SELECT'].includes(tag))return;if(e.key?.toLowerCase()==='f'&&!state.studioActive&&!state.dxfWizard&&!$('#modalHost')?.innerHTML){e.preventDefault();fitView()}},true);
 updateToolLinks();
 // ----------------------------------------------------------------------
+
+// ----------------------------------------------------------------------
+// Build 14 — canvas-first workspace, fast floor switch, popover inspection,
+//            unified floating controls and calmer zoom.
+const PANEL_STATE_KEY='facilitymanager.panelCollapsed.v14';
+let build14ZoomTimer=null,build14LastZoom=Number(state.transform?.scale||1);
+function build14PanelDefault(){try{const v=localStorage.getItem(PANEL_STATE_KEY);if(v==='1'||v==='0')return v==='1'}catch{}return document.documentElement.dataset.layout==='mobile'}
+const _setPanelCollapsedBuild14Base=setPanelCollapsed;
+setPanelCollapsed=function(v,{persist=true}={}){state.panelCollapsed=!!v;$('#app')?.classList.toggle('panel-collapsed',!!v);if(persist)try{localStorage.setItem(PANEL_STATE_KEY,v?'1':'0')}catch{}const u=$('#panelEdgeHandleIcon');if(u)u.setAttribute('href',v?'#mi-chevron-left':'#mi-chevron-right');const h=$('#panelEdgeHandle');if(h){h.setAttribute('aria-label',v?'정보 패널 펼치기':'정보 패널 접기');h.title=v?'정보 패널 펼치기':'정보 패널 접기'}if(!v){hideRoomQuickPopover();}syncFloatingSecureUi()}
+function showZoomHud(){const el=$('#zoomTransientHud');if(!el)return;el.textContent=Math.round(Number(state.transform?.scale||1)*100)+'%';el.classList.add('show');clearTimeout(build14ZoomTimer);build14ZoomTimer=setTimeout(()=>el.classList.remove('show'),850)}
+const _renderTopMetaBuild14Base=renderTopMeta;
+renderTopMeta=function(){try{_renderTopMetaBuild14Base()}catch{}const b=currentBuilding?.(),f=currentFloor?.();const bb=$('#currentLocationBuilding'),ff=$('#currentLocationFloor');if(bb)bb.textContent=b?.name||'건물 미선택';if(ff)ff.textContent=f?.label||'층 미선택';const z=Number(state.transform?.scale||1);if(Math.abs(z-build14LastZoom)>.0005){build14LastZoom=z;showZoomHud()}}
+function renderFloorQuickMenu(){const host=$('#floorQuickMenu'),b=currentBuilding?.();if(!host||!b)return;host.innerHTML=(b.floors||[]).map(f=>`<button role="menuitem" class="${f.id===state.floorId?'active':''}" data-quick-floor="${attr(f.id)}">${escapeHtml(f.label)}</button>`).join('')||'<div class="smallText muted" style="padding:8px">등록된 층이 없습니다.</div>';$$('[data-quick-floor]').forEach(x=>x.onclick=()=>{changeFloor(x.dataset.quickFloor);closeFloorQuickMenu()})}
+function openFloorQuickMenu(){renderFloorQuickMenu();$('#floorQuickMenu')?.classList.remove('hidden');$('#currentLocationPill')?.setAttribute('aria-expanded','true')}
+function closeFloorQuickMenu(){$('#floorQuickMenu')?.classList.add('hidden');$('#currentLocationPill')?.setAttribute('aria-expanded','false')}
+function toggleFloorQuickMenu(){$('#floorQuickMenu')?.classList.contains('hidden')?openFloorQuickMenu():closeFloorQuickMenu()}
+function roomQuickPosition(room,e){if(e&&Number.isFinite(e.clientX)&&Number.isFinite(e.clientY))return[e.clientX,e.clientY];try{const c=polygonCenter(room.geometry),g=$('#viewport'),m=g?.getScreenCTM();if(m){const pt=new DOMPoint(c[0],c[1]).matrixTransform(m);return[pt.x,pt.y]}}catch{}return[innerWidth/2,innerHeight/2]}
+function showRoomQuickPopover(room,e){const el=$('#roomQuickPopover');if(!el||!room||!state.panelCollapsed)return;const sec=roleRank[state.role]>=2?roomSecurity(room.id):null;el.innerHTML=`<div class="quickTitle">${escapeHtml(room.no||'')} ${room.name?'· '+escapeHtml(room.name):''}</div><div class="quickSub">${escapeHtml(room.usage||'용도 미지정')} · ${Number(room.areaM2||0).toFixed(2)}㎡</div><div class="quickMeta"><span>관리부서</span><b>${escapeHtml(room.department||'—')}</b><span>배정</span><b>${escapeHtml(room.assignee||'—')}</b>${sec?`<span>잠금</span><b>${escapeHtml(room.lockType||'—')}</b>`:''}</div><div class="quickActions"><button class="btn small primary" id="quickOpenDetail">상세 정보</button></div>`;el.classList.remove('hidden');const [x,y]=roomQuickPosition(room,e);requestAnimationFrame(()=>{const r=el.getBoundingClientRect(),margin=8,left=Math.max(margin,Math.min(innerWidth-r.width-margin,x+14)),top=Math.max(margin,Math.min(innerHeight-r.height-margin,y+14));el.style.left=left+'px';el.style.top=top+'px'});$('#quickOpenDetail').onclick=()=>{setPanelCollapsed(false);applySidePanelTab('query');renderDetails()}}
+function hideRoomQuickPopover(){$('#roomQuickPopover')?.classList.add('hidden')}
+const _selectRoomBuild14Base=selectRoom;
+selectRoom=function(id,e){_selectRoomBuild14Base(id,e);const room=selectedRoom();if(!room)return;if(state.panelCollapsed){showRoomQuickPopover(room,e)}else{hideRoomQuickPopover();applySidePanelTab('query');renderDetails()}}
+function syncBuild14SaveUi(){const b=$('#sideSaveBtn'),h=$('#panelEdgeHandle');if(b){b.disabled=!state.dirty;b.classList.toggle('primary',!!state.dirty)}if(h)h.classList.toggle('hasDirty',!!state.dirty)}
+function syncFloatingSecureUi(){const secure=roleRank[state.role]>=2,admin=state.role==='admin',b=$('#floatingSecureBtn'),u=$('#floatingSecureIcon');if(b){b.classList.toggle('authActive',secure);b.setAttribute('aria-label',admin?'잠금정보 표시 중':secure?'잠금정보 숨기기':'잠금정보 확인');b.title=admin?'잠금정보 표시 중':secure?'잠금정보 숨기기':'잠금정보 확인'}if(u)u.setAttribute('href',secure?'#mi-lock-open':'#mi-lock');const ab=$('#sideAdminBtn'),at=$('#sideAdminBtnText'),as=$('#sideAdminStatus');if(ab)ab.classList.toggle('authActive',admin);if(at)at.textContent=admin?'관리자 모드 종료':'관리자 인증';if(as)as.textContent=admin?(state.identity?.displayName?`관리자 · ${state.identity.displayName}`:'관리자 모드'):'일반 조회 모드';syncBuild14SaveUi()}
+const _updateAuthUiBuild14Base=updateAuthUi;
+updateAuthUi=function(){_updateAuthUiBuild14Base();syncFloatingSecureUi()}
+const _setDirtyBuild14Base=setDirty;setDirty=function(v=true){_setDirtyBuild14Base(v);syncBuild14SaveUi()}
+const _saveDatabaseBuild14Base=saveDatabase;saveDatabase=async function(...args){const r=await _saveDatabaseBuild14Base(...args);syncBuild14SaveUi();return r}
+function openBookmarkHelp(){const apple=/Mac|iPhone|iPad|iPod/i.test(navigator.platform+' '+navigator.userAgent);const desktop=!isiOSDevice()&&!/Android/i.test(navigator.userAgent);const body=desktop?`<p class="smallText muted">브라우저 보안상 웹페이지가 즐겨찾기를 직접 만들 수는 없습니다.</p><div class="manageCard"><b>${apple?'⌘ + D':'Ctrl + D'}</b><div class="manageNote">이 페이지를 즐겨찾기 또는 북마크에 추가하는 가장 빠른 방법입니다.</div></div>`:`<p class="smallText muted">모바일 브라우저의 메뉴 또는 공유 메뉴에서 <b>북마크 추가 / 즐겨찾기에 추가</b>를 선택해 주세요. 홈 화면 추가와는 별개로 둘 다 사용할 수 있습니다.</p>`;openModal('즐겨찾기에 추가',body,'<button class="btn primary bookmarkHelpClose">확인</button>');$('.bookmarkHelpClose').onclick=closeModal}
+openDeveloperContact=function(){const c=state.siteConfig||DEFAULT_SITE_CONFIG,email=(c.developerEmail||'creative2ya@gmail.com').trim();location.href=`mailto:${email}`}
+openAbout=function(){const c=state.siteConfig||DEFAULT_SITE_CONFIG,project=safeHttpUrl(c.projectUrl),pieni=safeHttpUrl(c.pieniPlanUrl||'https://bak2ya.github.io/PieniPlan/'),email=(c.developerEmail||'creative2ya@gmail.com').trim();openModal('정보',`<div class="manageCard"><b>${escapeHtml(c.productName||'시설관리')}</b><div class="manageNote">FacilityManager · v${VERSION} · Build ${BUILD}</div></div><p class="smallText muted">완성된 도면 위에서 시설관리 정보를 조회·관리합니다. 도면 제작과 구조 편집은 PieniPlan이 담당합니다.</p><div class="infoGrid" style="margin-top:12px"><span>프로젝트</span><b>FacilityManager</b><span>도면 제작</span><b>PieniPlan</b><span>개발자 연락</span><b>${escapeHtml(email)}</b></div>`,`<button class="btn aboutClose">닫기</button>${project?'<button class="btn aboutProject">GitHub에서 보기</button>':''}${pieni?'<button class="btn aboutPieni">PieniPlan 열기</button>':''}<button class="btn primary aboutDeveloper">개발자 연락하기</button>`);$('.aboutClose').onclick=closeModal;const pr=$('.aboutProject');if(pr)pr.onclick=()=>window.open(project,'_blank','noopener,noreferrer');const pp=$('.aboutPieni');if(pp)pp.onclick=()=>window.open(pieni,'_blank','noopener,noreferrer');$('.aboutDeveloper').onclick=openDeveloperContact}
+function build14BindControls(){
+  $('#floatingSearchBtn').onclick=()=>$('#searchBtn')?.click();$('#floatingPrintBtn').onclick=openPrint;$('#floatingSecureBtn').onclick=handleSecureButton;$('#panelEdgeHandle').onclick=()=>setPanelCollapsed(!state.panelCollapsed);$('#currentLocationPill').onclick=e=>{e.stopPropagation();toggleFloorQuickMenu()};
+  $('#sideAdminBtn').onclick=handleAdminButton;$('#sideSaveBtn').onclick=()=>saveDatabase();$('#bookmarkBtn').onclick=openBookmarkHelp;$('#aboutBtn').onclick=openAbout;
+  $('#settingsShortcutBtn').textContent='조작법';
+  $('#floorSvg').addEventListener('click',e=>{if(!e.target.closest?.('.room'))hideRoomQuickPopover()});
+  document.addEventListener('pointerdown',e=>{if(!e.target.closest?.('.workspaceLocation'))closeFloorQuickMenu();if(!e.target.closest?.('#roomQuickPopover')&&!e.target.closest?.('.room')&&state.panelCollapsed)hideRoomQuickPopover()});
+  window.addEventListener('resize',()=>{hideRoomQuickPopover();closeFloorQuickMenu()});
+}
+// Replace the earlier coarse wheel handler with normalized, capped zoom deltas.
+try{$('#floorSvg').removeEventListener('wheel',handleWheel)}catch{}
+handleWheel=function(e){e.preventDefault();const f=currentFloor();if(!f)return;const r=$('#floorSvg').getBoundingClientRect(),cx=(e.clientX-r.left)/Math.max(1,r.width)*f.width,cy=(e.clientY-r.top)/Math.max(1,r.height)*f.height;let dy=e.deltaY;if(e.deltaMode===1)dy*=16;else if(e.deltaMode===2)dy*=80;dy=Math.max(-80,Math.min(80,dy));const factor=Math.exp(-dy*.0009);zoomAt(factor,cx,cy)};
+$('#floorSvg').addEventListener('wheel',handleWheel,{passive:false});
+const _applySidePanelTabBuild14Base=applySidePanelTab;
+applySidePanelTab=function(tab,opt={}){_applySidePanelTabBuild14Base(tab,opt);if(tab==='query'&&!state.panelCollapsed)hideRoomQuickPopover()}
+const _applyLayoutBuild14Base=applyLayout;
+applyLayout=function(pref,opt={}){_applyLayoutBuild14Base(pref,opt);requestAnimationFrame(()=>{if(document.documentElement.dataset.layout==='mobile')setPanelCollapsed(true,{persist:false});renderTopMeta()})}
+// Default: desktop keeps the inspector visible, mobile starts canvas-first.
+setPanelCollapsed(build14PanelDefault(),{persist:false});
+build14BindControls();syncFloatingSecureUi();renderTopMeta();
+// ----------------------------------------------------------------------
+
 // Do not keep a persistent DB-status card at the bottom; status lives in Settings and the clickable top badge.
 applySidePanelTab(sidePanelTab,{persist:false});syncRoomLabelControls();
 // ----------------------------------------------------------------------

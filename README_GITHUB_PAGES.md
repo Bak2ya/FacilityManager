@@ -1,8 +1,8 @@
-# FacilityManager v0.12.1 · Build 13 — GitHub Pages 배포
+# FacilityManager v0.13.0 · Build 14 — GitHub Pages 배포
 
 ## 업로드
 
-`FacilityManager_v0.12.1_Build13_GITHUB_PAGES.zip`의 내용물을 저장소 루트에 올립니다.
+`FacilityManager_v0.13.0_Build14_GITHUB_PAGES.zip`의 내용물을 저장소 루트에 올립니다.
 
 GitHub Pages 설정:
 - Source: Deploy from a branch
@@ -20,31 +20,26 @@ GitHub Pages 설정:
 - PieniPlan 실행: https://bak2ya.github.io/PieniPlan/
 - PieniPlan GitHub: https://github.com/Bak2ya/PieniPlan
 
-`site-config.json`에는 다음 연결값이 들어 있습니다.
-
-```json
-{
-  "pieniPlanUrl": "https://bak2ya.github.io/PieniPlan/"
-}
-```
-
-PieniPlan GitHub Pages가 아직 준비되지 않은 동안에는 링크가 404를 표시할 수 있습니다. Pages 배포 후에는 FacilityManager에서 같은 주소를 그대로 사용할 수 있습니다.
+`site-config.json`의 `pieniPlanUrl`로 연결합니다.
 
 ## 데이터
 
 실제 `*.facdb`는 GitHub에 올리지 않습니다. 각 기기에서 `DB 불러오기`로 연결합니다.
+FACMAP 역시 실제 도면 공개가 허용되지 않는 환경이라면 내부에서 전달합니다.
 
-FACMAP은 도면 구조 전달용 파일입니다. 학교가 실제 도면 자체를 공개하면 안 되는 환경이라면 FACMAP 역시 내부에서 전달하고 GitHub 저장소에 올리지 않습니다.
+## Build 14 확인 포인트
 
-## Build 13 확인 포인트
+1. 데스크톱에서 상시 헤더 없이 도면이 화면 최상단부터 표시되는지
+2. `건물명 · 층`을 눌렀을 때 같은 건물 층만 표시되는지
+3. 패널을 접으면 빈 세로 레일이 남지 않는지
+4. 패널 닫힘 상태에서 호실 클릭 → 빠른 Popover가 나타나는지
+5. 패널 열림 상태에서 호실 클릭 → 자동으로 조회 탭이 되는지
+6. 모바일에서도 4~5번 원리가 동일한지
+7. 휠 한 번으로 확대율이 최대/최소로 튀지 않는지
+8. `설정 → 도움말 → 즐겨찾기에 추가` 안내가 모바일/데스크톱 모두 보이는지
+9. `설정 → 정보`에서 GitHub/PieniPlan/개발자 연락이 동작하는지
+10. `관리` 탭에서 관리자 인증과 변경사항 저장이 가능한지
 
-1. 기존 FACDB가 정상적으로 열리는지
-2. 호실/공간 조회와 시설정보 수정이 정상인지
-3. 샘플 FACMAP 가져오기에서 변경사항 비교가 표시되는지
-4. FACMAP 적용 후 시설관리 데이터가 유지되는지
-5. `PieniPlan 열기`가 새 탭에서 `https://bak2ya.github.io/PieniPlan/`을 여는지
-6. 모바일 메뉴에서도 PieniPlan 링크가 동일하게 동작하는지
-
-## 업데이트 주의
+## 기관 설정 파일
 
 기관별 `site-config.json`과 운영 중인 `latest-db.json`은 기관 설정 파일입니다. 앱 업데이트 시 기관 값을 확인한 뒤 교체하세요.

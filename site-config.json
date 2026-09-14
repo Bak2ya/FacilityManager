@@ -3,8 +3,9 @@
   "productName": "시설관리",
   "productEnglishName": "FacilityManager",
   "developerName": "Bak2ya",
-  "developerContactUrl": "https://github.com/Bak2ya",
+  "developerContactUrl": "mailto:creative2ya@gmail.com",
   "projectUrl": "https://github.com/Bak2ya/FacilityManager",
   "deploymentModel": "public-app-local-facdb",
-  "pieniPlanUrl": "https://bak2ya.github.io/PieniPlan/"
+  "pieniPlanUrl": "https://bak2ya.github.io/PieniPlan/",
+  "developerEmail": "creative2ya@gmail.com"
 }

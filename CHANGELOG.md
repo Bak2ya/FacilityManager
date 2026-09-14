@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.13.0 · Build 14
+- 캔버스 우선 전체 UI 재구성: 상시 앱 헤더 제거
+- 상단 중앙 위치 pill + 같은 건물 층 빠른 전환
+- 검색/출력/잠금 floating icon controls
+- 관리자 인증/저장을 관리 탭으로 이동
+- 오른쪽 패널 완전 접기 + edge handle
+- 패널 닫힘 시 공간 빠른 Popover, 열림 시 자동 조회 탭
+- 모바일/데스크톱 동일 공간 선택 원리
+- 휠 Zoom 감도 완화 + 일시적 확대율 HUD
+- 즐겨찾기 안내 추가, 정보 화면에 GitHub/PieniPlan/개발자 연락 통합
+- 개발자 연락: creative2ya@gmail.com
+
 ## v0.12.1 · Build 13
 - 도면 제작 프로젝트 정식 이름을 **PieniPlan**으로 반영
 - FacilityManager의 도면 제작 외부 링크를 PieniPlan 하나로 단순화

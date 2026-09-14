@@ -1,8 +1,8 @@
-# FacilityManager v0.13.0 · Build 14 — GitHub Pages 배포
+# FacilityManager v0.13.1 · Build 15 — GitHub Pages 배포
 
 ## 업로드
 
-`FacilityManager_v0.13.0_Build14_GITHUB_PAGES.zip`의 내용물을 저장소 루트에 올립니다.
+`FacilityManager_v0.13.1_Build15_GITHUB_PAGES.zip`의 내용물을 저장소 루트에 올립니다.
 
 GitHub Pages 설정:
 - Source: Deploy from a branch
@@ -27,7 +27,7 @@ GitHub Pages 설정:
 실제 `*.facdb`는 GitHub에 올리지 않습니다. 각 기기에서 `DB 불러오기`로 연결합니다.
 FACMAP 역시 실제 도면 공개가 허용되지 않는 환경이라면 내부에서 전달합니다.
 
-## Build 14 확인 포인트
+## Build 15 확인 포인트
 
 1. 데스크톱에서 상시 헤더 없이 도면이 화면 최상단부터 표시되는지
 2. `건물명 · 층`을 눌렀을 때 같은 건물 층만 표시되는지

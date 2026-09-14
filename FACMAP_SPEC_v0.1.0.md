@@ -91,7 +91,7 @@ FacilityManager는 이 ID를 `room.mapSpaceId`로 저장한다.
 
 FACMAP 갱신 시 FacilityManager는 **도면 소유 필드만 갱신하고 업무 필드는 보존**한다.
 
-## FacilityManager 적용 규칙 (v0.13.0 · Build 14 기준)
+## FacilityManager 적용 규칙 (v0.13.1 · Build 15 기준)
 1. 공간은 `mapSpaceId` 우선 매칭
 2. 최초 연결은 고유한 `roomNo`가 같으면 보조 매칭
 3. 경계/호실번호/면적/공간종류가 바뀐 공간만 변경으로 표시

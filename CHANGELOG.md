@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.13.3 · Build 17
+- 시설 데이터 연결 전에는 연결 카드만 표시하고 도면용 floating controls 숨김
+- iPhone/iPad에서 `.facdb` 파일이 비활성화되지 않도록 파일 선택기 확장자 제한 제거 + FileReader fallback 추가
+- 모바일 패널 열림 시 다른 floating tools를 숨기고 `>` 손잡이만 패널 왼쪽 경계에 유지
+- 위치 island 글씨를 14px로 키우고 건물명/층 길이에 따라 폭이 자연스럽게 변하도록 개선
+- 왼쪽 아래 확대/축소/홈 control group 제거
+- `전체 보기`를 fit-to-screen 아이콘으로 검색/출력/잠금/패널 control family에 통합
+- `표시 → 도면 배율` 슬라이더 추가, 휠/핀치/슬라이더 확대율 동기화
+
 
 ## v0.13.2 · Build 16
 

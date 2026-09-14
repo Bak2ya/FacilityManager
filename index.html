@@ -369,6 +369,46 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
 .offlineReadyNote{margin:9px 0}.offlineReadyCard .fullBtn{margin-top:8px}
 .offlineReadyCard.busy{opacity:.86}.offlineReadyCard.busy #offlinePrepareBtn{pointer-events:none}
 </style>
+
+<style id="build17Styles">
+/* Build 17 — mobile file loading + cleaner viewer controls + adaptive floor island */
+body:not(.facility-data-ready) .workspaceLocation,
+body:not(.facility-data-ready) .floatingActionCluster,
+body:not(.facility-data-ready) .mapArea>.zoomHUD,
+body:not(.facility-data-ready) .zoomTransientHud,
+body:not(.facility-data-ready) .roomQuickPopover{display:none!important}
+
+/* The legacy lower-left +/-/home control group is no longer part of the viewer. */
+html[data-layout="desktop"] .mapArea>.zoomHUD,
+html[data-layout="mobile"] .mapArea>.zoomHUD{display:none!important}
+
+/* Location island grows with its text, but keeps sane limits. Expanded state grows downward only. */
+.workspaceLocation{
+  --island-base-h:42px;--island-h:42px;
+  width:180px;min-width:150px;max-width:min(360px,76vw);height:var(--island-base-h);
+  border-radius:22px;
+  transition:width .22s cubic-bezier(.22,.8,.2,1),height .24s cubic-bezier(.22,.8,.2,1),border-radius .2s ease,box-shadow .2s ease
+}
+.workspaceLocation.is-open{height:var(--island-h);border-radius:22px}
+.locationPill{height:var(--island-base-h);padding:0 15px;font-size:14px;gap:6px;border-radius:22px}
+.locationPill .mi{width:16px;height:16px;flex:none}
+.floorQuickMenu{height:calc(var(--island-h) - var(--island-base-h));max-height:220px}
+html[data-layout="mobile"] .workspaceLocation{width:180px;min-width:146px;max-width:min(300px,76vw)}
+html[data-layout="mobile"] .locationPill{height:var(--island-base-h);padding:0 13px;font-size:14px}
+
+/* Precise zoom lives in Display rather than as permanent canvas buttons. */
+.viewScaleRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+.viewScaleRow input[type="range"]{width:100%;accent-color:var(--accent)}
+.viewScaleRow output{min-width:46px;text-align:right;font-size:12px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+
+/* On mobile, an open inspector only leaves the edge handle visible at the panel boundary. */
+html[data-layout="mobile"] #app:not(.panel-collapsed) .floatingActionCluster{right:min(92vw,var(--panel-width))!important}
+html[data-layout="mobile"] #app:not(.panel-collapsed) .floatingActionCluster .glassIconBtn{display:none!important}
+html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:grid!important}
+@media(max-width:560px){
+  html[data-layout="mobile"] #app:not(.panel-collapsed) .floatingActionCluster{right:min(92vw,var(--panel-width))!important}
+}
+</style>
 </head>
 
 <body>
@@ -383,6 +423,7 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
 <symbol id="mi-zoom-in" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zm.5-7H9v2H7v1h2v2h1v-2h2V9h-2z"/></symbol>
 <symbol id="mi-zoom-out" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zM7 9h5v1H7z"/></symbol>
 <symbol id="mi-home" viewBox="0 0 24 24"><path d="M12 5.69l5 4.5V18h-2v-6H9v6H7v-7.81l5-4.5M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/></symbol>
+<symbol id="mi-fit-screen" viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM4 15h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3z"/></symbol>
 <symbol id="mi-menu" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></symbol>
 <symbol id="mi-chevron-left" viewBox="0 0 24 24"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z"/></symbol>
 <symbol id="mi-chevron-right" viewBox="0 0 24 24"><path d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"/></symbol>
@@ -396,7 +437,7 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
 
 <div id="app">
   <header class="topbar">
-    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.13.2 · Build 16</div></div>
+    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.13.3 · Build 17</div></div>
     <div class="locationCompact"><select id="mobileBuilding"></select><select id="mobileFloor"></select></div>
     <div class="topSpacer"></div>
     <div class="topMeta">
@@ -421,6 +462,7 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
       <button class="glassIconBtn" id="floatingSearchBtn" aria-label="검색" title="검색"><svg class="mi"><use href="#mi-search"/></svg></button>
       <button class="glassIconBtn" id="floatingPrintBtn" aria-label="출력" title="출력"><svg class="mi"><use href="#mi-print"/></svg></button>
       <button class="glassIconBtn" id="floatingSecureBtn" aria-label="잠금정보 확인" title="잠금정보 확인"><svg class="mi"><use id="floatingSecureIcon" href="#mi-lock"/></svg></button>
+      <button class="glassIconBtn" id="floatingFitBtn" aria-label="전체 보기" title="전체 보기"><svg class="mi"><use href="#mi-fit-screen"/></svg></button>
       <button class="panelEdgeHandle" id="panelEdgeHandle" aria-label="정보 패널 접기" title="정보 패널 접기"><svg class="mi"><use id="panelEdgeHandleIcon" href="#mi-chevron-right"/></svg></button>
     </div>
     <div class="zoomTransientHud" id="zoomTransientHud" aria-live="polite">100%</div>
@@ -435,7 +477,7 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
     <div class="zoomHUD"><button class="iconBtn" id="zoomInBtn" aria-label="확대"><svg class="mi"><use href="#mi-zoom-in"/></svg></button><button class="iconBtn" id="zoomOutBtn" aria-label="축소"><svg class="mi"><use href="#mi-zoom-out"/></svg></button><button class="iconBtn" id="zoomFitBtn" aria-label="전체 보기"><svg class="mi"><use href="#mi-home"/></svg></button></div>
     <div class="mapHint">드래그 이동 · 휠/핀치 확대 · 공간 클릭/탭</div>
     <div class="dataOverlay" id="dataOverlay">
-      <div class="dataOverlayCard"><h2>시설 데이터를 연결해 주세요.</h2><p>FACDB 파일을 한 번 연결하면 이 기기의 브라우저 저장소에 보관되어 다음 접속부터 자동으로 열립니다. 실제 시설 데이터는 GitHub나 외부 서버로 업로드되지 않습니다.</p><div class="dataOverlayActions"><button class="btn primary" id="openDbBtn">시설 데이터 연결</button><input id="dbFileInput" type="file" accept=".facdb,application/json" class="hidden"/></div><div class="smallText muted" id="dbStatus" style="margin-top:12px"></div></div>
+      <div class="dataOverlayCard"><h2>시설 데이터를 연결해 주세요.</h2><p>FACDB 파일을 한 번 연결하면 이 기기의 브라우저 저장소에 보관되어 다음 접속부터 자동으로 열립니다. 실제 시설 데이터는 GitHub나 외부 서버로 업로드되지 않습니다.</p><div class="dataOverlayActions"><button class="btn primary" id="openDbBtn">시설 데이터 연결</button><input id="dbFileInput" type="file" class="hidden" aria-label="시설 데이터 파일 선택"/></div><div class="smallText muted" id="dbStatus" style="margin-top:12px"></div></div>
     </div>
   </main>
 
@@ -460,6 +502,7 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
             <div class="panelSection"><div class="panelTitle">도면 요소</div><div class="layerList"><label class="layerRow"><input type="checkbox" data-layer="doors" checked/> 문·창문</label><label class="layerRow"><input type="checkbox" data-layer="objects" checked/> 도면 기호</label><label class="layerRow"><input type="checkbox" data-layer="cad" checked/> 기준 도면</label></div></div>
             <div class="panelSection"><div class="panelTitle">시설</div><div class="layerList"><label class="layerRow"><input type="checkbox" data-layer="fire"/> 소방·방재</label><label class="layerRow"><input type="checkbox" data-layer="hvac"/> 냉난방</label></div></div>
             <div class="panelSection"><div class="panelTitle">호실 표시</div><div class="layerList roomLabelOptions"><label class="layerRow"><input type="checkbox" data-room-label="roomNo" checked/> 호실번호</label><label class="layerRow"><input type="checkbox" data-room-label="roomName" checked/> 호실명</label><label class="layerRow"><input type="checkbox" data-room-label="department"/> 관리부서</label><label class="layerRow"><input type="checkbox" data-room-label="area"/> 면적</label></div><div class="field compactField"><label>글자 크기</label><select id="roomLabelSizeSelect"><option value="auto">자동</option><option value="small">작게</option><option value="normal">보통</option><option value="large">크게</option></select></div></div>
+            <div class="panelSection"><div class="panelTitle">도면 배율</div><div class="viewScaleRow"><input id="viewScaleRange" type="range" min="45" max="500" step="5" value="100" aria-label="도면 배율"/><output id="viewScaleValue" for="viewScaleRange">100%</output></div><div class="manageNote">평소에는 휠·핀치로 확대/축소하고, 정확한 배율이 필요할 때 조절합니다.</div></div>
           </div>
 
           <div class="sideTabPane" data-side-pane="manage">
@@ -501,7 +544,7 @@ html[data-layout="mobile"] .roomQuickPopover{width:min(300px,calc(100vw - 16px))
 <script src="facmap-core.js"></script>
 <script>
 'use strict';
-const VERSION='0.13.2', BUILD=16;
+const VERSION='0.13.3', BUILD=17;
 const FACDB_SCHEMA='0.1.0';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const encText=new TextEncoder(), decText=new TextDecoder();
@@ -1493,6 +1536,45 @@ const offlinePrepareBtn=$('#offlinePrepareBtn');if(offlinePrepareBtn)offlinePrep
 const _persistCurrentContainerBuild16Base=persistCurrentContainer;persistCurrentContainer=async function(...args){const r=await _persistCurrentContainerBuild16Base(...args);refreshOfflineReadyUi();return r};
 window.addEventListener('online',()=>{refreshOfflineReadyUi();refreshLatestDbStatus()});window.addEventListener('offline',()=>refreshOfflineReadyUi());
 registerFacilityServiceWorker().finally(()=>refreshOfflineReadyUi());
+// ----------------------------------------------------------------------
+// Build 17 — user-visible viewer cleanup and iOS FACDB import robustness.
+function syncBuild17DataUi(){document.body.classList.toggle('facility-data-ready',!!state.container)}
+const _loadContainerBuild17Base=loadContainer;
+loadContainer=async function(...args){const r=await _loadContainerBuild17Base(...args);syncBuild17DataUi();return r};
+const _resetDataConnectionBuild17Base=resetDataConnection;
+resetDataConnection=function(...args){const r=_resetDataConnectionBuild17Base(...args);syncBuild17DataUi();return r};
+
+async function readFacilityDataFile(file){
+  if(!file)throw new Error('파일이 선택되지 않았습니다.');
+  if(typeof file.text==='function'){try{return await file.text()}catch(e){console.warn('File.text() failed; falling back to FileReader',e)}}
+  return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result??''));reader.onerror=()=>reject(reader.error||new Error('파일을 읽지 못했습니다.'));reader.readAsText(file,'utf-8')});
+}
+const dbInputBuild17=$('#dbFileInput');
+if(dbInputBuild17){
+  dbInputBuild17.removeAttribute('accept');
+  dbInputBuild17.onchange=async e=>{const input=e.currentTarget,file=input.files?.[0];try{if(file){state.dbHandle=null;const text=await readFacilityDataFile(file);await loadDbText(text,file.name||'시설 데이터',{persist:true})}}catch(err){console.error('facility data file read failed',err);$('#dbStatus').textContent='데이터를 읽지 못했습니다: '+(err?.message||err);toast('데이터 파일을 읽지 못했습니다.')}finally{input.value='';syncBuild17DataUi()}};
+}
+
+function setFloorIslandHeight(){const island=$('#floorIsland'),count=currentBuilding?.()?.floors?.length||0;if(!island)return;const base=42,listHeight=Math.min(220,Math.max(42,count*36+10));island.style.setProperty('--island-h',(base+listHeight)+'px')}
+function setFloorIslandWidth(){
+  const island=$('#floorIsland'),bb=$('#currentLocationBuilding'),ff=$('#currentLocationFloor');if(!island||!bb||!ff)return;
+  const min=document.documentElement.dataset.layout==='mobile'?146:150,max=Math.min(innerWidth*(document.documentElement.dataset.layout==='mobile'?.76:.70),document.documentElement.dataset.layout==='mobile'?300:360);
+  const desired=Math.ceil((bb.scrollWidth||0)+(ff.scrollWidth||0)+76);island.style.width=Math.max(min,Math.min(max,desired))+'px';
+}
+function syncViewScaleControl(){const r=$('#viewScaleRange'),o=$('#viewScaleValue');if(!r||!o)return;const pct=Math.round(Number(state.transform?.scale||1)*100);r.value=String(Math.max(Number(r.min)||45,Math.min(Number(r.max)||500,pct)));o.value=o.textContent=pct+'%'}
+function setViewScalePercent(percent){
+  const f=currentFloor?.();if(!f)return;const oldScale=Math.max(.0001,Number(state.transform?.scale||1)),newScale=Math.max(.45,Math.min(5,Number(percent)/100));
+  const cx=f.width/2,cy=f.height/2,focusX=(cx-state.transform.x)/oldScale,focusY=(cy-state.transform.y)/oldScale;
+  state.transform.x=cx-focusX*newScale;state.transform.y=cy-focusY*newScale;state.transform.scale=newScale;
+  if(typeof updateMapViewTransformOnly==='function')updateMapViewTransformOnly();else renderMap();
+  showZoomHud?.();syncViewScaleControl();
+}
+const _renderTopMetaBuild17Base=renderTopMeta;
+renderTopMeta=function(){try{_renderTopMetaBuild17Base()}catch{}setFloorIslandWidth();syncViewScaleControl();syncBuild17DataUi()};
+const viewScaleRange=$('#viewScaleRange');if(viewScaleRange){viewScaleRange.oninput=e=>setViewScalePercent(e.currentTarget.value)}
+const floatingFitBtn=$('#floatingFitBtn');if(floatingFitBtn)floatingFitBtn.onclick=()=>{fitView();syncViewScaleControl();showZoomHud?.()};
+window.addEventListener('resize',()=>requestAnimationFrame(()=>{setFloorIslandWidth();syncViewScaleControl()}));
+requestAnimationFrame(()=>{syncBuild17DataUi();setFloorIslandWidth();syncViewScaleControl()});
 // ----------------------------------------------------------------------
 
 // ----------------------------------------------------------------------

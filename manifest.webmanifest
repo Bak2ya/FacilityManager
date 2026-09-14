@@ -2,7 +2,7 @@
   "id": "./",
   "name": "시설관리",
   "short_name": "시설관리",
-  "description": "완성 도면 기반 시설관리 웹앱",
+  "description": "완성 도면 기반 시설관리 웹앱 · 선택형 오프라인 사용 지원",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
@@ -23,5 +23,9 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "categories": [
+    "productivity",
+    "utilities"
   ]
 }

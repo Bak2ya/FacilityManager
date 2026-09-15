@@ -1,6 +1,6 @@
 'use strict';
 const CACHE_PREFIX='facilitymanager-offline-';
-const CACHE_NAME=`${CACHE_PREFIX}v17`;
+const CACHE_NAME=`${CACHE_PREFIX}v18`;
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 async function cachedNavigation(){

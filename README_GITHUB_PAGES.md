@@ -1,8 +1,8 @@
-# FacilityManager v0.13.3 · Build 17 — GitHub Pages 배포
+# FacilityManager v0.13.4 · Build 18 — GitHub Pages 배포
 
 ## 업로드
 
-`FacilityManager_v0.13.3_Build17_GITHUB_PAGES.zip`의 내용물을 저장소 루트에 올립니다.
+`FacilityManager_v0.13.4_Build18_GITHUB_PAGES.zip`의 내용물을 저장소 루트에 올립니다.
 
 GitHub Pages 설정:
 - Source: Deploy from a branch
@@ -19,7 +19,7 @@ GitHub Pages 설정:
 이미 운영 중인 저장소에 더 최신 값이 있으면 **ZIP의 기본 파일로 무조건 덮어쓰지 말고 기존 운영 파일을 유지**하세요.
 실제 `*.facdb`는 GitHub에 올리지 않습니다.
 
-## Build 17에서 필요한 앱 파일
+## Build 18에서 필요한 앱 파일
 
 오프라인 사용 준비와 PWA/FACMAP 동작을 위해 다음 파일이 함께 배포되어야 합니다.
 - `index.html`
@@ -50,9 +50,9 @@ GitHub Pages 설정:
 
 도면 제작·편집·트레이싱·공간 정의는 PieniPlan에서 진행합니다.
 
-## Build 17 확인 포인트
+## Build 18 확인 포인트
 
-1. Build 15의 상단 층 island / 우측 floating tools / 패널 동작이 그대로 유지되는지
+1. Build 17의 상단 층 island / 우측 floating tools / 패널 동작이 그대로 유지되는지
 2. 설정 데이터 버튼이 `데이터 불러오기 / 데이터 내보내기 / 최신 여부 확인`으로 보이는지
 3. 오프라인 카드가 `앱 파일 준비`와 `시설 데이터 준비`를 구분해 표시하는지
 4. 준비 완료 후 인터넷을 끄고 완전 종료/재실행해도 앱이 열리는지
@@ -61,9 +61,16 @@ GitHub Pages 설정:
 7. 인터넷 복구 후 최신 여부 확인이 정상화되는지
 8. FACMAP 가져오기와 PWA 아이콘/manifest가 정상인지
 
-### Build 17 추가 확인
+### Build 18 추가 확인
 - iPhone/iPad에서 `.facdb` 파일 선택이 활성화되는지
 - 데이터 연결 전 floating controls가 보이지 않는지
 - 모바일 패널을 열었을 때 `>` 손잡이만 패널 왼쪽 경계에 남는지
 - 위치 island 폭이 건물명 길이에 따라 자연스럽게 변하는지
 - `표시 → 도면 배율` 슬라이더와 휠/핀치 확대율이 동기화되는지
+
+### Build 18 테마 확인
+- 라이트 모드가 순백색이 아니라 크림/아이보리 계열로 보이는지
+- 라이트 모드에서 도면 배경과 방 내부도 순백색으로 튀지 않는지
+- 다크 모드가 `#0D1117 / #161B22 / #21262D` 계열의 GitHub Dark 느낌으로 보이는지
+- 블랙(OLED) 모드는 기존 완전 검정 성격을 유지하는지
+- 시스템 테마 전환 시 브라우저 theme-color까지 자연스럽게 바뀌는지

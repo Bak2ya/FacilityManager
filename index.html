@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
 <meta name="color-scheme" content="light dark" />
-<meta id="themeColorMeta" name="theme-color" content="#F4F6F8" />
+<meta id="themeColorMeta" name="theme-color" content="#EDE9E0" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="시설관리" />
@@ -62,22 +62,22 @@
 </style>
 <style>
 :root{
-  --bg:#eef1f4; --panel:#ffffff; --panel2:#f6f7f9; --text:#1b2026; --muted:#6a737d;
-  --line:#d7dde3; --line2:#bec7d0; --accent:#3f6e8b; --accentSoft:#e4eef4; --accentStrong:#2f5872;
-  --danger:#a33f3f; --warn:#8d6b22; --ok:#2e7351; --shadow:0 14px 38px rgba(22,30,38,.14);
+  --bg:#EDE9E0; --panel:#F8F5EE; --panel2:#F1ECE3; --text:#292722; --muted:#6F6A61;
+  --line:#D8D0C3; --line2:#C7BDAF; --accent:#607D8D; --accentSoft:#DFE6E4; --accentStrong:#3F637A;
+  --primary-bg:#476575; --primary-text:#FFFFFF; --danger:#A8433F; --warn:#9B6A22; --ok:#3F785C; --shadow:0 14px 38px rgba(61,52,42,.13);
   --top:54px; --right:366px; --radius:12px;
-  --drawing-bg:#fbfbfa; --drawing-ink:#252a2f; --drawing-wall:#3f464c; --drawing-partition:#5d656d;
-  --drawing-muted:#7b838b; --drawing-zone:#f2f4f5; --drawing-service:#f7f8f8; --drawing-select:#dbeaf3;
+  --drawing-bg:#F3F0E8; --drawing-ink:#2D2B27; --drawing-wall:#383632; --drawing-partition:#716B63;
+  --drawing-muted:#80786F; --drawing-zone:#EEEAE2; --drawing-service:#F5F1EA; --drawing-select:rgba(82,111,128,.14);
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#101419; --panel:#181d22; --panel2:#20262c; --text:#eef2f5; --muted:#99a3ae;
-  --line:#333b44; --line2:#48525c; --accent:#8fb4ca; --accentSoft:#20323e; --accentStrong:#c0d8e5;
-  --danger:#df8585; --warn:#d4b86a; --ok:#7bc49d; --shadow:0 18px 44px rgba(0,0,0,.34);
+  --bg:#0D1117; --panel:#161B22; --panel2:#21262D; --text:#E6EDF3; --muted:#8B949E;
+  --line:#30363D; --line2:#484F58; --accent:#58A6FF; --accentSoft:rgba(56,139,253,.16); --accentStrong:#58A6FF;
+  --primary-bg:#1F6FEB; --primary-text:#FFFFFF; --danger:#FF7B72; --warn:#D29922; --ok:#3FB950; --shadow:0 18px 44px rgba(0,0,0,.38);
 }}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;font-size:14px}
 button,input,select,textarea{font:inherit;color:inherit}button{border:0;background:none}button:not(:disabled){cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .hidden{display:none!important}.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.mi{width:20px;height:20px;display:block;fill:currentColor;flex:0 0 auto}.mi.sm{width:18px;height:18px}.mi.lg{width:22px;height:22px}
-.btn{height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:650;white-space:nowrap}.btn:hover{background:var(--panel2)}.btn.primary{background:var(--accentStrong);border-color:var(--accentStrong);color:#fff}.btn.ghost{border-color:transparent;background:transparent}.btn.danger{color:var(--danger)}.btn.small{height:30px;padding:0 9px;font-size:12px}.btn.authActive{background:var(--accentSoft);border-color:var(--accent);color:var(--accentStrong)}
+.btn{height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;gap:7px;font-weight:650;white-space:nowrap}.btn:hover{background:var(--panel2)}.btn.primary{background:var(--primary-bg,var(--accentStrong));border-color:var(--primary-bg,var(--accentStrong));color:var(--primary-text,#fff)}.btn.ghost{border-color:transparent;background:transparent}.btn.danger{color:var(--danger)}.btn.small{height:30px;padding:0 9px;font-size:12px}.btn.authActive{background:var(--accentSoft);border-color:var(--accent);color:var(--accentStrong)}
 .iconBtn{width:38px;height:38px;border:1px solid var(--line);border-radius:10px;background:var(--panel);display:grid;place-items:center;color:var(--text)}.iconBtn:hover{background:var(--panel2)}
 .badge{display:inline-flex;align-items:center;height:25px;padding:0 8px;border-radius:999px;background:var(--accentSoft);color:var(--accentStrong);font-size:12px;font-weight:700}.badge.muted{background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
 .field{display:grid;gap:6px}.field label{font-size:12px;color:var(--muted);font-weight:650}.field input,.field select,.field textarea{width:100%;min-height:38px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel)}.field textarea{min-height:90px;resize:vertical}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -128,34 +128,35 @@ hr{border:0;border-top:1px solid var(--line);margin:14px 0}.muted{color:var(--mu
 .accountList{display:grid;gap:8px}.accountRow{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}.accountHead{display:flex;align-items:center;gap:7px}.accountHead .spacer{flex:1}.accountMeta{margin-top:4px;font-size:12px;color:var(--muted)}.accountActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.manageDivider{height:1px;background:var(--line);margin:14px 0}.accountForm{display:grid;gap:9px}.permissionCheck{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--muted)}.permissionCheck input{margin-top:2px}.localDataPill{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:5px 7px;background:var(--panel2);border:1px solid var(--line);border-radius:999px}
 
 
-/* Build 5 — Light / Dark / OLED Black theme tokens */
+/* Theme tokens — Build 18 palette refinement.
+   Light: warm cream/ivory with reduced glare. Dark: GitHub-Dark-inspired neutral blue-gray. */
 html[data-theme="light"]{
   color-scheme:light;
-  --bg:#F4F6F8;--panel:#FFFFFF;--panel2:#F8FAFC;--input-bg:#F8FAFC;--hover-bg:#F2F5F8;
-  --text:#18212B;--muted:#566372;--disabled:#929CA7;--line:#D7DDE4;--line2:#CBD2DA;
-  --accent:#2563EB;--accentSoft:#DBEAFE;--accentStrong:#2563EB;--danger:#C62828;--warn:#B76E00;--ok:#198754;
-  --shadow:0 14px 38px rgba(22,30,38,.14);--floating-bg:rgba(255,255,255,.94);--floating-text:#35414C;--floating-border:#D7DDE4;--toast-bg:#20252A;
-  --drawing-bg:#FFFFFF;--drawing-room:#FFFFFF;--drawing-room-hover:#F7FAFC;--drawing-ink:#17212B;--drawing-wall:#17212B;--drawing-partition:#495661;
-  --drawing-muted:#727E89;--drawing-zone:#F7F8FA;--drawing-service:#FAFBFC;--drawing-select:rgba(37,99,235,.13);--drawing-select-stroke:#2563EB;
-  --drawing-door:#34414D;--drawing-door-arc:#697681;--drawing-threshold:#84909B;--drawing-window:#286D94;--drawing-cad:#84909B;--drawing-object:#34414D;
-  --drawing-editor:#2563EB;--drawing-snap:#0F766E;--fire:#C62828;--hvac:#087EA4;--electric:#C17C00;--telecom:#7651B6;
+  --bg:#EDE9E0;--panel:#F8F5EE;--panel2:#F1ECE3;--input-bg:#F5F1E8;--hover-bg:#E9E3D9;
+  --text:#292722;--muted:#6F6A61;--disabled:#9B9488;--line:#D8D0C3;--line2:#C7BDAF;
+  --accent:#607D8D;--accentSoft:#DFE6E4;--accentStrong:#3F637A;--primary-bg:#476575;--primary-text:#FFFFFF;--danger:#A8433F;--warn:#9B6A22;--ok:#3F785C;
+  --shadow:0 14px 38px rgba(61,52,42,.13);--floating-bg:rgba(248,245,238,.93);--floating-text:#3B3934;--floating-border:#D7CFC3;--toast-bg:#302E2A;
+  --drawing-bg:#F3F0E8;--drawing-room:#FAF8F3;--drawing-room-hover:#F4EFE7;--drawing-ink:#2D2B27;--drawing-wall:#383632;--drawing-partition:#716B63;
+  --drawing-muted:#80786F;--drawing-zone:#EEEAE2;--drawing-service:#F5F1EA;--drawing-select:rgba(82,111,128,.14);--drawing-select-stroke:#526F80;
+  --drawing-door:#4B4842;--drawing-door-arc:#817A70;--drawing-threshold:#A2998D;--drawing-window:#5A7E91;--drawing-cad:#918A80;--drawing-object:#4B4842;
+  --drawing-editor:#526F80;--drawing-snap:#4E7A72;--fire:#A8433F;--hvac:#4D7C8C;--electric:#9B732A;--telecom:#75679A;
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#14191F;--panel:#171D24;--panel2:#20272F;--input-bg:#11171D;--hover-bg:#202830;
-  --text:#F1F4F7;--muted:#AEB8C2;--disabled:#6F7A85;--line:#343D47;--line2:#46515C;
-  --accent:#4C9AFF;--accentSoft:#193A5A;--accentStrong:#3B82F6;--danger:#FF6868;--warn:#FFB84D;--ok:#52C788;
-  --shadow:0 18px 44px rgba(0,0,0,.34);--floating-bg:rgba(23,29,36,.94);--floating-text:#E5EBF0;--floating-border:#3A444E;--toast-bg:#242B32;
-  --drawing-bg:#10151B;--drawing-room:#10151B;--drawing-room-hover:#151C23;--drawing-ink:#F3F6F8;--drawing-wall:#E8EDF2;--drawing-partition:#AEB9C3;
-  --drawing-muted:#8996A2;--drawing-zone:#151B22;--drawing-service:#12181E;--drawing-select:rgba(76,154,255,.20);--drawing-select-stroke:#58A6FF;
-  --drawing-door:#CBD4DC;--drawing-door-arc:#8F9CA8;--drawing-threshold:#6F7C88;--drawing-window:#76BFE8;--drawing-cad:#6F7C88;--drawing-object:#C4CDD6;
-  --drawing-editor:#58A6FF;--drawing-snap:#4FD1C5;--fire:#FF6868;--hvac:#54C7EC;--electric:#FFC34D;--telecom:#B69AFF;
+  --bg:#0D1117;--panel:#161B22;--panel2:#21262D;--input-bg:#0D1117;--hover-bg:#292E36;
+  --text:#E6EDF3;--muted:#8B949E;--disabled:#6E7681;--line:#30363D;--line2:#484F58;
+  --accent:#58A6FF;--accentSoft:rgba(56,139,253,.16);--accentStrong:#58A6FF;--primary-bg:#1F6FEB;--primary-text:#FFFFFF;--danger:#FF7B72;--warn:#D29922;--ok:#3FB950;
+  --shadow:0 18px 44px rgba(0,0,0,.38);--floating-bg:rgba(22,27,34,.94);--floating-text:#E6EDF3;--floating-border:#30363D;--toast-bg:#21262D;
+  --drawing-bg:#0D1117;--drawing-room:#0D1117;--drawing-room-hover:#161B22;--drawing-ink:#E6EDF3;--drawing-wall:#F0F6FC;--drawing-partition:#8C959F;
+  --drawing-muted:#8B949E;--drawing-zone:#161B22;--drawing-service:#0F141B;--drawing-select:rgba(56,139,253,.20);--drawing-select-stroke:#58A6FF;
+  --drawing-door:#C9D1D9;--drawing-door-arc:#8B949E;--drawing-threshold:#6E7681;--drawing-window:#79C0FF;--drawing-cad:#6E7681;--drawing-object:#C9D1D9;
+  --drawing-editor:#58A6FF;--drawing-snap:#56D4DD;--fire:#FF7B72;--hvac:#79C0FF;--electric:#E3B341;--telecom:#BC8CFF;
 }
 html[data-theme="black"]{
   color-scheme:dark;
   --bg:#000000;--panel:#000000;--panel2:#000000;--input-bg:#000000;--hover-bg:#0A0A0A;
   --text:#F2F2F2;--muted:#B8B8B8;--disabled:#6F6F6F;--line:#292929;--line2:#393939;
-  --accent:#52A5FF;--accentSoft:rgba(82,165,255,.16);--accentStrong:#3F8FFF;--danger:#FF6262;--warn:#FFB84C;--ok:#50D890;
+  --accent:#52A5FF;--accentSoft:rgba(82,165,255,.16);--accentStrong:#3F8FFF;--primary-bg:#1F6FEB;--primary-text:#FFFFFF;--danger:#FF6262;--warn:#FFB84C;--ok:#50D890;
   --shadow:0 18px 46px rgba(0,0,0,.70);--floating-bg:#000000;--floating-text:#F0F0F0;--floating-border:#393939;--toast-bg:#101010;
   --drawing-bg:#000000;--drawing-room:#000000;--drawing-room-hover:#070707;--drawing-ink:#F4F4F4;--drawing-wall:#F0F0F0;--drawing-partition:#BEBEBE;
   --drawing-muted:#8F8F8F;--drawing-zone:#000000;--drawing-service:#000000;--drawing-select:rgba(82,165,255,.22);--drawing-select-stroke:#61B0FF;
@@ -437,7 +438,7 @@ html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:g
 
 <div id="app">
   <header class="topbar">
-    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.13.3 · Build 17</div></div>
+    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.13.4 · Build 18</div></div>
     <div class="locationCompact"><select id="mobileBuilding"></select><select id="mobileFloor"></select></div>
     <div class="topSpacer"></div>
     <div class="topMeta">
@@ -544,7 +545,7 @@ html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:g
 <script src="facmap-core.js"></script>
 <script>
 'use strict';
-const VERSION='0.13.3', BUILD=17;
+const VERSION='0.13.4', BUILD=18;
 const FACDB_SCHEMA='0.1.0';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const encText=new TextEncoder(), decText=new TextDecoder();
@@ -555,7 +556,7 @@ const themeMedia=matchMedia('(prefers-color-scheme: dark)');
 let themePreference=(()=>{try{const p=localStorage.getItem(THEME_KEY)||'system';return ['system','light','dark','black'].includes(p)?p:'system'}catch{return 'system'}})();
 function resolveTheme(pref=themePreference){return pref==='system'?(themeMedia.matches?'dark':'light'):pref}
 function syncThemeControls(){const a=$('#themeSelect'),b=$('#mobileThemeSelect');if(a)a.value=themePreference;if(b)b.value=themePreference}
-function applyTheme(pref,{persist=true,announce=false}={}){themePreference=['system','light','dark','black'].includes(pref)?pref:'system';const actual=resolveTheme(themePreference);document.documentElement.dataset.theme=actual;document.documentElement.dataset.themePreference=themePreference;try{if(persist)localStorage.setItem(THEME_KEY,themePreference)}catch{}const meta=$('#themeColorMeta');if(meta)meta.content=actual==='black'?'#000000':actual==='dark'?'#14191F':'#F4F6F8';syncThemeControls();if(announce)toast(themePreference==='black'?'블랙 모드로 전환했습니다.':themePreference==='dark'?'다크 모드로 전환했습니다.':themePreference==='light'?'라이트 모드로 전환했습니다.':'시스템 화면 설정을 따릅니다.')}
+function applyTheme(pref,{persist=true,announce=false}={}){themePreference=['system','light','dark','black'].includes(pref)?pref:'system';const actual=resolveTheme(themePreference);document.documentElement.dataset.theme=actual;document.documentElement.dataset.themePreference=themePreference;try{if(persist)localStorage.setItem(THEME_KEY,themePreference)}catch{}const meta=$('#themeColorMeta');if(meta)meta.content=actual==='black'?'#000000':actual==='dark'?'#0D1117':'#EDE9E0';syncThemeControls();if(announce)toast(themePreference==='black'?'블랙 모드로 전환했습니다.':themePreference==='dark'?'다크 모드로 전환했습니다.':themePreference==='light'?'라이트 모드로 전환했습니다.':'시스템 화면 설정을 따릅니다.')}
 try{themeMedia.addEventListener('change',()=>{if(themePreference==='system')applyTheme('system',{persist:false})})}catch{themeMedia.addListener?.(()=>{if(themePreference==='system')applyTheme('system',{persist:false})})}
 
 function b64ToBytes(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}function bytesToB64(b){let s='';b.forEach(v=>s+=String.fromCharCode(v));return btoa(s)}
@@ -1538,6 +1539,7 @@ window.addEventListener('online',()=>{refreshOfflineReadyUi();refreshLatestDbSta
 registerFacilityServiceWorker().finally(()=>refreshOfflineReadyUi());
 // ----------------------------------------------------------------------
 // Build 17 — user-visible viewer cleanup and iOS FACDB import robustness.
+// Build 18 — warm cream light palette + GitHub-Dark-inspired dark palette.
 function syncBuild17DataUi(){document.body.classList.toggle('facility-data-ready',!!state.container)}
 const _loadContainerBuild17Base=loadContainer;
 loadContainer=async function(...args){const r=await _loadContainerBuild17Base(...args);syncBuild17DataUi();return r};

@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.13.4 · Build 18
+- 라이트 테마를 순백 중심에서 따뜻한 크림/아이보리 팔레트로 조정해 눈부심 완화
+- 라이트 도면 배경/호실 면/패널/입력창까지 같은 따뜻한 색온도로 통일
+- 라이트 강조색을 강한 기본 파랑에서 차분한 슬레이트 블루로 변경
+- 다크 테마를 GitHub Dark 계열(`#0D1117`, `#161B22`, `#21262D`)로 정리
+- 다크 도면 선/텍스트/선택색도 같은 GitHub Dark 계열 대비로 조정
+- Black(OLED) 모드는 별도 완전 검정 테마로 유지
+- 브라우저/PWA theme-color와 오프라인 cache namespace를 Build 18에 맞게 갱신
+
 ## v0.13.3 · Build 17
 - 시설 데이터 연결 전에는 연결 카드만 표시하고 도면용 floating controls 숨김
 - iPhone/iPad에서 `.facdb` 파일이 비활성화되지 않도록 파일 선택기 확장자 제한 제거 + FileReader fallback 추가

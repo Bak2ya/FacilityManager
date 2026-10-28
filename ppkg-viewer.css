@@ -1,0 +1,25 @@
+.ppkg-technical{pointer-events:none}
+.ppkg-wall{stroke:var(--drawing-wall);fill:none;stroke-linecap:butt;stroke-linejoin:round}
+.ppkg-line,.ppkg-door,.ppkg-window,.ppkg-component,.ppkg-swing,.ppkg-shutter{fill:none;vector-effect:non-scaling-stroke;stroke:var(--drawing-ink);stroke-width:1}
+.ppkg-swing{stroke:var(--drawing-door-arc);stroke-width:.65}
+.ppkg-window{stroke:var(--drawing-window)}
+.ppkg-component{stroke:var(--drawing-object)}
+.ppkg-shutter{stroke:var(--drawing-door)}
+.ppkg-label{fill:var(--drawing-ink);text-anchor:middle;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:var(--drawing-room);stroke-width:2px;stroke-linejoin:round}
+.ppkg-annotation{fill:var(--drawing-ink);stroke:none}
+.ppkg-space .roomShape{fill:var(--drawing-room);stroke:var(--drawing-muted);stroke-width:.5}
+.ppkg-space.selected .roomShape{fill:var(--drawing-select);stroke:var(--drawing-select-stroke);stroke-width:2}
+.ppkg-space:hover .roomShape{fill:var(--drawing-room-hover)}
+.ppkg-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ppkg-controls .btn{min-width:0}
+#ppkgReturnBtn[hidden]{display:none}
+.ppkg-status{font-size:12px;line-height:1.55;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
+.ppkg-status strong{color:var(--text);font-weight:600}
+.ppkg-detail-note{padding:10px 14px;border-bottom:1px solid var(--line);font-size:12px;line-height:1.6;color:var(--muted)}
+.ppkg-link-info{margin-top:14px;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.ppkg-info-list{margin:8px 0;padding-left:18px;font-size:12px;line-height:1.6}
+.ppkg-mode .ppkg-legacy-action{display:none!important}
+.ppkg-mode #cadCanvasLayer{visibility:hidden}
+.ppkg-mode #floorSelect{max-width:100%}
+.ppkg-mode .locationGrid{grid-template-columns:1fr}
+@media print{.ppkg-technical{--drawing-wall:#222;--drawing-ink:#222;--drawing-door-arc:#555;--drawing-object:#333;--drawing-window:#444}.ppkg-space{--drawing-room:#fff;--drawing-muted:#888;--drawing-ink:#222}.ppkg-label{fill:#222;stroke:#fff}}

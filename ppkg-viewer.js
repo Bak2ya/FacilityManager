@@ -12,7 +12,7 @@ function linksFor(f){if(window.FacilityFaci?.active)return window.FacilityFaci.l
 function sync(){
   document.body.classList.toggle('ppkg-mode',active);
   document.body.classList.toggle('facility-data-ready',active||!!state.container);
-  $('#dataOverlay').classList.toggle('hidden',active||!!state.container);
+  $('#dataOverlay').classList.toggle('hidden',(active||!!state.container)&&!window.FacilityWorkspace?.startVisible);
   $('#ppkgReturnBtn').hidden=!session||!!window.FacilityFaci?.active;
   $('#ppkgReturnBtn').textContent=active?'시설 데이터 보기':'PPKG 조회로 돌아가기';
   $('#ppkgReturnBtn').disabled=active&&!state.container;
@@ -63,7 +63,7 @@ async function importFiles(files){
     const model=C.makeModel(sources); // Stage the whole batch before touching live selection or management data.
     if(targetDocumentId!==window.FacilityFaci?.documentId)throw new Error('가져오는 동안 관리 문서가 바뀌었습니다. 다시 선택해 주세요.');
     if(window.FacilityFaci?.active)window.FacilityFaci.acceptSources(sources,model);
-    session={sources,model};ppkgCacheReady=false;viewCache=new Map();activate();refreshOfflineReadyUi();
+    session={sources,model};ppkgCacheReady=false;viewCache=new Map();activate();window.FacilityWorkspace?.enterWorkspace();refreshOfflineReadyUi();
     $('#ppkgImportError').textContent='';
     toast(`PPKG 도면을 열었습니다. 건물 ${model.buildings.length} · 도면 ${model.drawings.size} · 공간 ${model.spaces.size}`);
   }catch(e){

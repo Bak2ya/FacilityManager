@@ -1,0 +1,17 @@
+/* Start cards follow the same product-family hierarchy; workspace retains the approved canvas and right panel. */
+#dataOverlay{position:fixed!important;inset:0!important;z-index:80;background:var(--bg,var(--drawing-bg));overflow:auto;display:block;padding:clamp(22px,5vw,70px)}
+.facilityStart{max-width:880px;margin:0 auto;color:var(--text)}
+.startBrand{display:flex;align-items:center;gap:10px;font-weight:650}.startBrand img{width:32px;height:32px}.startBrand .smallText{margin-left:auto}
+.facilityStart h1{font-size:clamp(24px,3vw,34px);margin:36px 0 8px;font-weight:650}.startIntro{color:var(--muted);margin:0 0 28px}
+.startCard{border:1px solid var(--line);border-radius:14px;padding:24px;background:var(--panel);min-width:0}.startPrimary{padding:28px;border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}.startCard h2{font-size:18px;margin:8px 0 10px}.startPrimary h2{font-size:24px}.startCard p{color:var(--muted);font-size:13px;line-height:1.65;margin:0 0 20px}.startEyebrow{font-size:12px;font-weight:650;color:var(--accent)}
+.startActions{display:flex;flex-wrap:wrap;gap:8px}.startActions:empty{display:none}.startSecondary{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.startBottom{display:flex;align-items:center;gap:16px;margin-top:20px}.recentFaciInfo{font-size:12px;line-height:1.7;margin:16px 0;color:var(--text);overflow-wrap:anywhere}.recentFaciInfo:empty{display:none}.recentFaciInfo hr{border:0;border-top:1px solid var(--line);margin:12px 0}.startCard [hidden]{display:none!important}
+.workspaceModes{position:absolute;left:14px;top:12px;z-index:12;display:flex;align-items:center;gap:6px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.workspaceModes .btn{border:0;background:transparent}.modeSegments{display:flex;gap:2px}.modeSegments button{font:inherit;font-size:12px;color:var(--muted);border:0;border-radius:7px;background:transparent;padding:7px 12px;cursor:pointer}.modeSegments button.active{background:var(--surface-2,var(--line));color:var(--text);font-weight:650}.modeSegments button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.faciSaveState{font-size:11px;line-height:1.6;padding:10px 0 12px;color:var(--muted);overflow-wrap:anywhere}.faciSaveState b,.faciSaveState span{display:block}.faciSaveState b{font-size:12px;color:var(--text)}
+.faci-reading #ppkgImportBtn,.faci-reading [data-side-tab="manage"]{display:none!important}.start-visible .workspaceModes{visibility:hidden}.start-visible .rightPanel{visibility:hidden}.start-visible #floorIsland,.start-visible .floatingActionCluster,.start-visible #panelEdgeHandle{visibility:hidden}
+@media(max-width:900px){.workspaceModes{top:58px;left:10px}.workspaceModes #workspaceHomeBtn{font-size:11px}.workspaceModes .modeSegments button{padding:6px 9px}}
+@media(max-width:600px){#dataOverlay{padding:24px 16px}.startSecondary{grid-template-columns:1fr;gap:12px}.startCard,.startPrimary{padding:20px}.startBrand .smallText{font-size:10px}.facilityStart h1{margin-top:28px}.startBottom{align-items:flex-start;flex-direction:column;gap:12px}.startActions .btn{min-height:38px}.workspaceModes{top:62px}.faciSaveState{font-size:11px}}
+@media print{.workspaceModes,#faciSaveState,#dataOverlay{display:none!important}}
+
+.start-visible .mapArea>:not(#dataOverlay){visibility:hidden}
+
+html[data-layout="mobile"] .sideControls>.workspaceModes{position:static;margin:0 0 12px;padding:3px;width:max-content;max-width:100%}

@@ -18,7 +18,7 @@ function wall(w,openings){
   const holes=openings.map(o=>[Math.max(0,o.t-o.width/(2*length)),Math.min(1,o.t+o.width/(2*length))]).sort((a,b)=>a[0]-b[0]);
   const spans=[];let from=0;
   for(const [a,b] of holes){if(a>from)spans.push([from,a]);from=Math.max(from,b);}if(from<1)spans.push([from,1]);
-  return spans.map(([a,b])=>w.geometry==='arc'?`<path class="ppkg-wall" data-geometry="arc" d="${arc(w,a,b)}" stroke-width="${n(w.thickness||150)}"/>`:`<line class="ppkg-wall" x1="${n(C.wallPoint(w,a).x)}" y1="${n(C.wallPoint(w,a).y)}" x2="${n(C.wallPoint(w,b).x)}" y2="${n(C.wallPoint(w,b).y)}" stroke-width="${n(w.thickness||150)}"/>`).join('');
+  return spans.map(([a,b])=>w.geometry==='arc'?`<path class="ppkg-wall" data-geometry="arc" d="${arc(w,a,b)}" data-physical-thickness="${n(w.thickness||150)}" vector-effect="non-scaling-stroke" stroke-width="2.2"/>`:`<line class="ppkg-wall" x1="${n(C.wallPoint(w,a).x)}" y1="${n(C.wallPoint(w,a).y)}" x2="${n(C.wallPoint(w,b).x)}" y2="${n(C.wallPoint(w,b).y)}" data-physical-thickness="${n(w.thickness||150)}" vector-effect="non-scaling-stroke" stroke-width="2.2"/>`).join('');
 }
 function opening(o,own){
   const host=own.get(o.wallId),p=C.wallPoint(host,o.t),w=o.width,h=w/2;
@@ -54,8 +54,8 @@ function object(o,own){
     return `<g data-object-type="stair"><polygon class="ppkg-component" points="${pts(p)}"/>${steps}</g>`;
   }
   if(o.type==='component')return `<g data-object-type="component" transform="translate(${n(o.point.x)} ${n(o.point.y)}) rotate(${n(o.rotation||0)}) scale(${n((o.scaleX??1)*(o.mirrorX?-1:1))} ${n((o.scaleY??1)*(o.mirrorY?-1:1))})">${o.componentDefinition.paths.map(p=>`<${p.closed?'polygon':'polyline'} class="ppkg-component" points="${pts(p.points)}"/>`).join('')}</g>`;
-  if(o.type==='cadText')return `<text class="ppkg-annotation" x="${n(o.point.x)}" y="${n(o.point.y)}" font-size="${n(o.height||200)}">${esc(o.text)}</text>`;
-  if(o.type==='dimension'){const mid={x:(o.p1.x+o.p2.x)/2,y:(o.p1.y+o.p2.y)/2};return line(o.p1,o.p2)+`<text class="ppkg-annotation" x="${n(mid.x)}" y="${n(mid.y-50)}" font-size="150">${esc(o.text??Math.round(Math.hypot(o.p2.x-o.p1.x,o.p2.y-o.p1.y)))}</text>`;}
+  if(o.type==='cadText')return `<text class="ppkg-annotation" transform="translate(${n(o.point.x)} ${n(o.point.y)}) rotate(${n(o.rotation||0)}) scale(1 -1)" x="0" y="0" font-size="${n(o.height||200)}">${esc(o.text)}</text>`;
+  if(o.type==='dimension'){const mid={x:(o.p1.x+o.p2.x)/2,y:(o.p1.y+o.p2.y)/2};return line(o.p1,o.p2)+`<text class="ppkg-annotation" transform="translate(${n(mid.x)} ${n(mid.y+50)}) scale(1 -1)" x="0" y="0" font-size="150">${esc(o.text??Math.round(Math.hypot(o.p2.x-o.p1.x,o.p2.y-o.p1.y)))}</text>`;}
   return '';
 }
 function markup(view,options={}){

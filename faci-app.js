@@ -6,7 +6,7 @@ const ACTIVE='activeFaci',PREVIOUS='previousFaci';
 const old={detailHtml,detailTabHtml,roomEditHtml,readDraftField,accountManagerHtml,toggleAccount,toggleManagePermission,openResetPassword,handleAdminButton,handleSecureButton,prepareOfflineUse,cachedFacilityDataReady};
 let lastGood=null,saving=false,loading=false,generation=0,editSerial=0;
 const originalSetDirty=setDirty;
-setDirty=function(value=true){if(value)editSerial++;originalSetDirty(value);};
+setDirty=function(value=true){if(value)editSerial++;originalSetDirty(value);window.FacilityWorkspace?.onDirty(value);};
 const active=()=>state.container?.format==='FACI';
 const area=n=>n==null?'미입력':`${Number(n).toFixed(2)}㎡`;
 function requireAdmin(){if(!active()||state.role!=='admin')throw new Error('FACI 관리자 인증이 필요합니다.');}
@@ -27,19 +27,27 @@ function decorate(view){
    getOwnPropertyDescriptor(target,k){if(k==='geometry')return{configurable:true,enumerable:true,value:drawingRoom.geometry,writable:false};return Reflect.getOwnPropertyDescriptor(target,k);}
   });
  });
- view.equipment=state.pub.equipmentByDrawing[view.id]||[];
+ // Project saved placements into the current view; never rewrite legacy coordinates on read.
+ const items=state.pub.equipmentByDrawing[view.id]||[],frame=state.pub.placementFrames[view.id];
+ view.equipment=frame?placementView(items,frame.matrix,view.matrix):items;
  return view;
 }
-const storage={async write(doc,previous){
+function inverse(m){const d=m[0]*m[3]-m[1]*m[2];if(!Number.isFinite(d)||Math.abs(d)<1e-15)throw new Error('설비 배치 기준을 변환할 수 없습니다.');return[m[3]/d,-m[1]/d,-m[2]/d,m[0]/d,(m[2]*m[5]-m[3]*m[4])/d,(m[1]*m[4]-m[0]*m[5])/d];}
+function placementView(items,from,to){
+ const forward=P.multiply(to,inverse(from)),backward=inverse(forward),cache=new WeakMap();
+ const project=item=>{if(!item||typeof item!=='object')return item;if(cache.has(item))return cache.get(item);const proxy=new Proxy(item,{get(t,k){if(k==='x'||k==='y')return P.transform(forward,t)[k];return Reflect.get(t,k);},set(t,k,v){if(k==='x'||k==='y'){const q=P.transform(forward,t);q[k]=v;Object.assign(t,P.transform(backward,q));return true;}return Reflect.set(t,k,v);}});cache.set(item,proxy);return proxy;};
+ return new Proxy(items,{get(t,k,r){return /^\d+$/.test(String(k))?project(t[k]):Reflect.get(t,k,r);},set(t,k,v){if(/^\d+$/.test(String(k))&&v&&typeof v==='object'){const q=P.transform(backward,v);v={...v,x:q.x,y:q.y};}return Reflect.set(t,k,v);}});
+}
+const storage={async write(doc,previous,options={}){
  const db=await openLocalDatabase();
  return new Promise((resolve,reject)=>{
   const tx=db.transaction(LOCAL_STORE,'readwrite'),store=tx.objectStore(LOCAL_STORE);
   if(previous)store.put({name:'previous.faci',text:JSON.stringify(previous)},PREVIOUS);
-  store.put({name:state.currentDbName||'FacilityManager.faci',text:JSON.stringify(doc)},ACTIVE);
+  store.put({name:options.name||state.currentDbName||'FacilityManager.faci',text:JSON.stringify(doc),tracking:options.tracking||window.FacilityWorkspace?.persistenceState(doc)||null},ACTIVE);
   tx.oncomplete=()=>{db.close();resolve();};tx.onabort=tx.onerror=()=>{db.close();reject(tx.error||new Error('로컬 저장을 완료하지 못했습니다.'));};
  });
 }};
-async function activateDocument(doc,name,{keys=null,secure=null,admin=null,dirty=false}={}){
+async function activateDocument(doc,name,{keys=null,secure=null,admin=null,dirty=false,tracking=null,fromFile=false}={}){
  await F.validate(doc);
  generation++;state.container=F.clone(doc);state.pub=publicView(F.clone(doc.public));state.currentDbName=name||'FacilityManager.faci';
  state.keys=keys||{};state.sec=secure||{roomSecurity:{}};state.adm=admin||{accounts:[],changeLog:[]};
@@ -49,10 +57,10 @@ async function activateDocument(doc,name,{keys=null,secure=null,admin=null,dirty
  lastGood=F.clone(doc);$('#floorSvg').innerHTML='';V.setViewAdapter(decorate);V.setSources(doc.drawings.sources);
  const view=doc.public.settings.view;
  if(view&&V.model.drawings.has(view.drawingId)){state.buildingId=view.buildingId;changeFloor(view.drawingId);if(currentFloor()?.rooms.some(r=>r.id===view.roomId))state.selectedRoomIds=new Set([view.roomId]);}
- setDirty(dirty);$('#dataOverlay').classList.add('hidden');updateAuthUi();populateSelectors();renderAll();syncUi();refreshOfflineReadyUi();refreshLatestDbStatus();
+ window.FacilityWorkspace?.onActivate(doc,{dirty,tracking,fromFile});setDirty(dirty);$('#dataOverlay').classList.add('hidden');updateAuthUi();populateSelectors();renderAll();syncUi();refreshOfflineReadyUi();refreshLatestDbStatus();window.FacilityWorkspace?.sync();
 }
 function syncUi(){
- $('#createFaciBtn').textContent=active()?'새 FACI 문서':'FACI 새로 만들기';
+ $('#createFaciBtn').textContent=active()?'새 FACI 문서':'FACI 새로 만들기';window.FacilityWorkspace?.sync();
  $('#recoverFaciBtn').disabled=!active();$('#exportPpkgBtn').disabled=!active()||!state.container.drawings.sources.length;
  if(!active())return;
  $('#ppkgReturnBtn').hidden=true;
@@ -64,12 +72,13 @@ function syncUi(){
  $('#constructionBtn')?.closest('.panelSection')?.classList.remove('ppkg-legacy-action');
  $('#dbStatus').textContent=`${state.currentDbName} · FACI v1 · Revision ${state.container.revision}`;
 }
-async function loadText(text,name='시설관리.faci',{persist=true}={}){
+async function loadText(text,name='시설관리.faci',{persist=true,tracking=null,fromFile=true}={}){
  if(saving||loading)throw new Error('저장 또는 열기가 진행 중입니다. 완료 후 다시 선택해 주세요.');
  loading=true;
  try{const incoming=JSON.parse(text);await F.validate(incoming);
-  if(persist)await storage.write(incoming,lastGood); // Failure leaves the currently open document intact.
-  await activateDocument(incoming,name);
+  if(window.FacilityWorkspace&&!(await window.FacilityWorkspace.approveReplacement()))return false;
+  if(persist){const db=await openLocalDatabase();await new Promise((resolve,reject)=>{const tx=db.transaction(LOCAL_STORE,'readwrite'),store=tx.objectStore(LOCAL_STORE);if(lastGood)store.put({name:state.currentDbName,text:JSON.stringify(lastGood)},PREVIOUS);store.put({name,text:JSON.stringify(incoming),tracking:tracking||(fromFile?{fileRevision:incoming.revision}:null)},ACTIVE);if(fromFile)store.put({name,text:JSON.stringify(incoming)},'recentFaciFile');tx.oncomplete=()=>{db.close();resolve();};tx.onabort=tx.onerror=()=>{db.close();reject(tx.error||new Error('로컬 저장 실패'));};});} // Failure leaves the currently open document intact.
+  await activateDocument(incoming,name,{tracking,fromFile});window.FacilityWorkspace?.afterFileOpen();return true;
  }finally{loading=false;}
 }
 async function save(options={}){
@@ -81,35 +90,41 @@ async function save(options={}){
   if(token!==generation)throw new Error('저장 중 관리 문서가 바뀌었습니다.');
   await storage.write(next,lastGood);
   const stillDirty=serial!==editSerial,working=stillDirty?{crypto:state.container.crypto,drawings:state.container.drawings,history:state.container.history}:null;
-  state.container=next;if(working)Object.assign(state.container,working);lastGood=F.clone(next);state.pub.settings=F.clone(next.public.settings);setDirty(stillDirty);syncUi();
+  window.FacilityWorkspace?.onLocalSaved(next,stillDirty);state.container=next;if(working)Object.assign(state.container,working);lastGood=F.clone(next);state.pub.settings=F.clone(next.public.settings);setDirty(stillDirty);syncUi();
   if(!options.silent)toast('FACI를 이 기기에 저장했습니다. 파일 저장으로 다른 기기에 전달할 수 있습니다.');return true;
  }catch(e){toast('저장하지 못했습니다. 기존 정상 데이터는 유지됩니다: '+e.message);return false;}
  finally{saving=false;}
 }
 async function exportFaci(){
- if(saving||loading){toast('저장 또는 열기가 진행 중입니다. 완료 후 파일 저장을 눌러 주세요.');return;}
- if(!active()){toast('먼저 FACI 문서를 만들거나 열어 주세요.');return;}
+ if(saving||loading){toast('저장 또는 열기가 진행 중입니다. 완료 후 파일 저장을 눌러 주세요.');return false;}
+ if(!active()){toast('먼저 FACI 문서를 만들거나 열어 주세요.');return false;}
+ if(state.roomEditDraft){toast('입력 중인 내용을 먼저 적용하거나 취소한 뒤 FACI 파일을 저장해 주세요.');return false;}
  if(state.dirty&&!(await save({silent:true})))return;
  if(state.dirty){toast('저장 중 새 변경사항이 생겼습니다. 한 번 더 저장해 주세요.');return;}
- try{await F.validate(state.container);downloadBlob(new Blob([JSON.stringify(state.container)],{type:'application/json'}),exportDbFileName());toast('FACI 파일 저장을 요청했습니다. 브라우저 다운로드 목록을 확인해 주세요.');}catch(e){toast(e.message);}
+ try{await F.validate(state.container);downloadBlob(new Blob([JSON.stringify(state.container)],{type:'application/json'}),exportDbFileName());await window.FacilityWorkspace?.onFileRequested(state.container);toast('FACI 파일 저장을 요청했습니다. 브라우저 다운로드 목록을 확인해 주세요.');return true;}catch(e){toast(e.message);return false;}
 }
-function recoveryDialog(token){
+function protectBackdrop(handler){$('.modalBackdrop').addEventListener('pointerdown',e=>{if(e.target===e.currentTarget){e.stopImmediatePropagation();handler();}},{capture:true});}
+function recoveryDialog(token,{first=false}={}){
  const doc=state.container,text=`FACI-RECOVERY-1\nDocument: ${doc.id}\nOwner: ${doc.crypto.ownerId}\nKey: ${token}\n`;
  openModal('최상위 관리자 복구키',`<p>최상위 관리자만 보관하세요. FACI 파일과 분리해 보관하고 다른 사용자에게 전달하지 마세요.</p><p class="smallText muted">다른 사용자는 계정관리에서 다시 생성합니다. 이 키를 가진 사람은 최상위 관리자를 복구할 수 있습니다. 새 복구키는 새 FACI를 저장한 파일에 적용됩니다.</p><textarea id="faciRecoveryText" readonly aria-label="최상위 관리자 복구키">${esc(text)}</textarea>`,'<button class="btn" id="faciRecoveryClose">닫기</button><button class="btn primary" id="faciRecoveryDownload">복구키 별도 저장</button>');
- $('#faciRecoveryText').style.cssText='width:100%;min-height:125px';$('#faciRecoveryClose').onclick=closeModal;
- $('#faciRecoveryDownload').onclick=()=>downloadBlob(new Blob([text],{type:'text/plain'}),`FACI_Recovery_${doc.id}.txt`);
+ $('#faciRecoveryText').style.cssText='width:100%;min-height:125px';let keyRequested=false;const finish=()=>{if(first&&!keyRequested&&!confirm('복구키를 아직 별도로 저장하지 않았습니다. 모든 최상위 관리자 암호를 잊으면 보호정보를 복구할 수 없습니다. 닫을까요?'))return;closeModal();if(first)window.FacilityWorkspace?.offerFirstSave();};$('#faciRecoveryClose').onclick=finish;$('.modalClose').onclick=finish;protectBackdrop(finish);
+ $('#faciRecoveryDownload').onclick=()=>{downloadBlob(new Blob([text],{type:'text/plain'}),`FACI_Recovery_${doc.id}.txt`);keyRequested=true;$('#faciRecoveryDownload').textContent='복구키 저장 요청됨';};
 }
-function createUi(){
+async function createUi(){
  if(saving||loading){toast('진행 중인 저장 또는 열기가 끝난 뒤 다시 시도해 주세요.');return;}
- if(state.dirty&&!confirm('저장되지 않은 변경사항이 있습니다. 새 FACI를 만들기 전에 현재 파일을 저장했는지 확인해 주세요. 계속할까요?'))return;
- openModal('학교 전체 FACI 만들기',`${field('학교명','faciOrganization','')}${field('최상위 관리자 이름','faciOwnerName','')}${field('관리자 암호','faciOwnerPassword','','password')}${field('암호 확인','faciOwnerPassword2','','password')}<p class="smallText muted">현재 열린 PPKG 도면을 포함합니다. 일반 시설정보는 인증 없이 조회하고, 출입정보·계정·관리자 기록은 암호화합니다. 암호만으로 사용자를 구분하며 빈 암호·중복 암호는 허용하지 않습니다.</p><div id="faciCreateError" role="alert"></div>`,'<button class="btn" id="faciCreateCancel">취소</button><button class="btn primary" id="faciCreateConfirm">FACI 만들기</button>');
- $('#faciCreateCancel').onclick=closeModal;
+ if(window.FacilityWorkspace&&!(await window.FacilityWorkspace.approveReplacement()))return;
+ openModal('새 시설관리 만들기',`${field('기관명','faciOrganization','')}${field('일반 관리자 암호','faciAdminPassword','','password')}${field('일반 관리자 암호 확인','faciAdminPassword2','','password')}${field('최상위 관리자 담당자명','faciOwnerName','')}${field('최상위 관리자 암호','faciOwnerPassword','','password')}${field('최상위 관리자 암호 확인','faciOwnerPassword2','','password')}<p class="smallText muted">일반 관리자는 시설정보를 수정하고, 최상위 관리자는 계정·권한과 보안 복구도 관리합니다. 두 암호는 달라야 합니다. 공유 관리자 암호로는 실제 변경자를 구분할 수 없습니다.</p><p class="smallText muted">빈 FACI를 만듭니다. 도면은 생성 후 추가할 수 있습니다. 일반 시설정보는 공개 조회하며 출입정보·계정·변경기록은 암호화합니다.</p><div id="faciCreateError" role="alert"></div>`,'<button class="btn" id="faciCreateCancel">취소</button><button class="btn primary" id="faciCreateConfirm">FACI 만들기</button>');
+ const cancel=()=>{if([...document.querySelectorAll('#modalHost input')].some(e=>e.value)&&!confirm('입력한 기관·관리자 설정이 저장되지 않았습니다. 설정을 취소할까요?'))return;closeModal();};
+ $('#faciCreateCancel').onclick=cancel;$('.modalClose').onclick=cancel;protectBackdrop(cancel);
  $('#faciCreateConfirm').onclick=async()=>{
   const button=$('#faciCreateConfirm');button.disabled=true;loading=true;
   try{
-   if($('#faciOwnerPassword').value!==$('#faciOwnerPassword2').value)throw new Error('암호 확인이 일치하지 않습니다.');
-   const result=await F.create({sources:V.sources,organization:$('#faciOrganization').value.trim(),ownerName:$('#faciOwnerName').value,password:$('#faciOwnerPassword').value});
-   await activateDocument(result.document,'FacilityManager.faci',{...result,dirty:true});closeModal();recoveryDialog(result.recoveryKey);
+   if($('#faciAdminPassword').value!==$('#faciAdminPassword2').value)throw new Error('일반 관리자 암호 확인이 일치하지 않습니다.');
+   if($('#faciOwnerPassword').value!==$('#faciOwnerPassword2').value)throw new Error('최상위 관리자 암호 확인이 일치하지 않습니다.');
+   const result=await F.create({sources:[],organization:$('#faciOrganization').value.trim(),ownerName:$('#faciOwnerName').value,password:$('#faciOwnerPassword').value,adminPassword:$('#faciAdminPassword').value});
+   // Keep the preceding normal document until the new document has safely committed.
+   const previous=lastGood;await storage.write(result.document,previous,{name:'FacilityManager.faci',tracking:{fileRevision:0}});
+   await activateDocument(result.document,'FacilityManager.faci',{...result,dirty:false,tracking:{fileRevision:0}});closeModal();window.FacilityWorkspace?.enterWorkspace();recoveryDialog(result.recoveryKey,{first:true});
   }catch(e){$('#faciCreateError').textContent=e.message;button.disabled=false;}finally{loading=false;}
  };
 }
@@ -156,22 +171,22 @@ function showQuick(room,e){
  const el=$('#roomQuickPopover');if(!room||!state.panelCollapsed)return;
  el.innerHTML=`<div class="quickTitle">${esc(room.no||room.name||room._ppkg?.object.name||'공간')}</div><div class="quickSub">등록 ${area(room.areaM2)} · 도면 ${area(room._ppkg?.object.areaM2)}</div><div class="quickMeta"><span>관리부서</span><b>${esc(room.department||'—')}</b></div><div class="quickActions"><button class="btn small primary" id="quickOpenDetail">상세 정보</button></div>`;el.classList.remove('hidden');const[x,y]=roomQuickPosition(room,e);requestAnimationFrame(()=>{const r=el.getBoundingClientRect();el.style.left=Math.max(8,Math.min(innerWidth-r.width-8,x+14))+'px';el.style.top=Math.max(8,Math.min(innerHeight-r.height-8,y+14))+'px';});$('#quickOpenDetail').onclick=()=>{setPanelCollapsed(false);applySidePanelTab('query');renderDetails();};
 }
-function bindOwnerActions(){const btn=$('#faciReissueRecovery');if(btn)btn.onclick=async()=>{if(state.identity?.id!==state.container.crypto.ownerId)return;const next=F.clone(state.container),token=await F.recoveryWrap(next,state.keys);state.container.crypto.recovery=next.crypto.recovery;setDirty();recoveryDialog(token);};}
+function bindOwnerActions(){const btn=$('#faciReissueRecovery');if(btn)btn.onclick=async()=>{if(state.identity?.id!==state.container.crypto.ownerId)return;const documentId=state.container.id,ownerId=state.identity.id,next=F.clone(state.container),token=await F.recoveryWrap(next,state.keys);if(state.role!=='admin'||state.container.id!==documentId||state.identity?.id!==ownerId)return;state.container.crypto.recovery=next.crypto.recovery;setDirty();recoveryDialog(token);};}
 accountManagerHtml=function(){let html=old.accountManagerHtml();if(!active()||!html)return html;if(state.identity?.id===state.container.crypto.ownerId)html=html.replace('<div class="manageBody">','<div class="manageBody"><div class="manageCard"><b>최상위 관리자 복구</b><p class="smallText muted">복구키는 최상위 관리자만 보관합니다. 다른 계정은 계정관리에서 다시 생성합니다.</p><button class="btn fullBtn" id="faciReissueRecovery">최상위 관리자 복구키 재발급</button></div>');return html.replaceAll('암호 재설정','암호 변경 / 계정 재생성');};
 toggleAccount=async function(accountId){if(active()&&(accountId===state.container.crypto.ownerId||accountById(accountId)?.replacedBy)){toast('최상위 관리자 또는 교체된 과거 계정은 비활성/재활성화할 수 없습니다.');return;}return old.toggleAccount(accountId);};
 toggleManagePermission=async function(accountId){if(active()&&accountId===state.container.crypto.ownerId){toast('최상위 관리자 권한은 유지됩니다.');return;}return old.toggleManagePermission(accountId);};
 openResetPassword=function(accountId){
  if(!active()||accountId===state.container.crypto.ownerId)return old.openResetPassword(accountId);
- const account=accountById(accountId);if(!currentCanManageAdmins()||!account||account.replacedBy)return;
+ const documentId=state.container?.id,actorId=state.identity?.id,account=accountById(accountId);if(!currentCanManageAdmins()||!account||account.replacedBy)return;
  if(accountId===state.identity?.id){toast('본인 계정의 재생성은 다른 계정관리자에게 요청해 주세요.');return;}
  openModal('사용자 계정 다시 생성',`<p>${esc(account.displayName)}의 과거 계정은 비활성으로 보존하고 새 계정을 만듭니다.</p>${field('새 암호','faciRecreatePassword','','password')}${field('새 암호 확인','faciRecreatePassword2','','password')}<div id="faciRecreateError" role="alert"></div>`,'<button class="btn" id="faciRecreateCancel">취소</button><button class="btn primary" id="faciRecreateGo">계정 다시 생성</button>');
- $('#faciRecreateCancel').onclick=closeModal;$('#faciRecreateGo').onclick=async()=>{try{const password=$('#faciRecreatePassword').value;if(!password||password!==$('#faciRecreatePassword2').value)throw new Error('암호 확인을 점검해 주세요.');if(await passwordAlreadyUsed(password))throw new Error('이미 사용하는 암호입니다.');const newId=uid('account'),keys={secure:state.keys.secure};if(account.level==='admin')keys.admin=state.keys.admin;const c=await createCredentialRecord({id:newId,password,keys});state.container.crypto.credentials=state.container.crypto.credentials.filter(v=>v.id!==accountId);account.active=false;account.replacedBy=newId;state.adm.accounts.push({...F.clone(account),id:newId,active:true,replacedBy:null,createdAt:new Date().toISOString()});state.container.crypto.credentials.push(c);logChange(account.displayName,'계정 다시 생성','과거 계정 기록 보존');setDirty();closeModal();renderDetails();}catch(e){$('#faciRecreateError').textContent=e.message;}};
+ $('#faciRecreateCancel').onclick=closeModal;$('#faciRecreateGo').onclick=async()=>{try{const password=$('#faciRecreatePassword').value;if(!password||password!==$('#faciRecreatePassword2').value)throw new Error('암호 확인을 점검해 주세요.');if(await passwordAlreadyUsed(password))throw new Error('이미 사용하는 암호입니다.');const newId=uid('account'),keys={secure:state.keys.secure};if(account.level==='admin')keys.admin=state.keys.admin;const c=await createCredentialRecord({id:newId,password,keys});if(!currentCanManageAdmins()||state.container.id!==documentId||state.identity?.id!==actorId)return;state.container.crypto.credentials=state.container.crypto.credentials.filter(v=>v.id!==accountId);account.active=false;account.replacedBy=newId;state.adm.accounts.push({...F.clone(account),id:newId,active:true,replacedBy:null,createdAt:new Date().toISOString()});state.container.crypto.credentials.push(c);logChange(account.displayName,'계정 다시 생성','과거 계정 기록 보존');setDirty();closeModal();renderDetails();}catch(e){$('#faciRecreateError').textContent=e.message;}};
 };
 authenticateCredential=(password,purpose)=>F.authenticate(state.container,password,purpose);
 createCredentialRecord=options=>F.credential(state.container,options);
 passwordAlreadyUsed=(password,exclude='')=>F.passwordUsed(state.container,password,exclude);
 decryptSection=(name,key)=>F.decryptSection(state.container,name,key);
-handleAdminButton=function(){if(!active()){toast('FACI 문서를 먼저 열어 주세요.');return;}if(state.role==='admin'&&state.dirty){if(!confirm('저장되지 않은 변경사항을 버리고 관리자 모드를 종료할까요?'))return;activateDocument(lastGood,state.currentDbName).catch(e=>toast(e.message));return;}return old.handleAdminButton();};
+handleAdminButton=function(){if(!active()){toast('FACI 문서를 먼저 열어 주세요.');return;}if(window.FacilityWorkspace)return window.FacilityWorkspace.setMode(state.role==='admin'?'read':'write');return old.handleAdminButton();};
 handleSecureButton=function(){if(!active()){toast('FACI 문서를 먼저 열어 주세요.');return;}return old.handleSecureButton();};
 saveDatabase=options=>save(typeof options==='boolean'?{silent:options}:options||{});
 exportDatabase=exportFaci;
@@ -183,7 +198,7 @@ latestDbPayload=function(){if(!active())throw new Error('FACI 문서가 없습�
 persistCurrentContainer=async function(){if(!active())return;if(state.dirty){if(!(await save({silent:true})))throw new Error('먼저 관리자 권한으로 변경사항을 저장해 주세요.');}else await storage.write(lastGood,null);};
 cachedFacilityDataReady=async()=>active()?!!(await localGet(ACTIVE))?.text:old.cachedFacilityDataReady();
 prepareOfflineUse=async function(){if(!active())return old.prepareOfflineUse();try{await persistCurrentContainer();const reg=await registerFacilityServiceWorker();if(!reg)throw new Error('HTTPS 또는 지원 브라우저가 필요합니다.');await cacheOfflineAppFiles();try{await navigator.storage?.persist?.();}catch{}await refreshOfflineReadyUi();toast('오프라인 사용 준비를 확인했습니다.');}catch(e){toast('오프라인 준비 실패: '+e.message);}};
-window.FacilityFaci={get active(){return active();},get documentId(){return active()?state.container.id:null;},storage,syncUi,renderDetails,showQuick,loadText,save,activateDocument,
+window.FacilityFaci={get active(){return active();},get documentId(){return active()?state.container.id:null;},storage,syncUi,renderDetails,showQuick,loadText,save,activateDocument,exportFaci,createUi,placementView,
  linksFor(view){return new Map(view.rooms.map(r=>[r.id,r.spaceUuid?{status:'linked',room:r}:{status:'unlinked'}]));},
  extraMarkup(view){return view.equipment.filter(e=>state.layers[e.type]).map(renderEquipSvg).join('');},
  acceptSources(sources){requireAdmin();if(saving||loading)throw new Error('저장 또는 열기가 끝난 뒤 도면을 추가해 주세요.');const next=F.withSources({...state.container,public:F.clone(state.pub)},sources).document;state.container.drawings=next.drawings;state.pub.spaces=next.public.spaces;state.pub.equipmentByDrawing=next.public.equipmentByDrawing;state.pub.placementFrames=next.public.placementFrames;setDirty();},
@@ -192,5 +207,5 @@ $('#createFaciBtn').onclick=createUi;$('#createFaciStartBtn').onclick=createUi;$
 $('#sideSaveBtn').onclick=exportFaci;$('#exportDbBtn').onclick=exportFaci;$('#floatingSecureBtn').onclick=handleSecureButton;$('#sideAdminBtn').onclick=handleAdminButton;$('#offlinePrepareBtn').onclick=prepareOfflineUse;
 window.addEventListener('keydown',e=>{if(active()&&(e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();exportFaci();}});
 syncUi();
-localGet(ACTIVE).then(cached=>{if(cached?.text)return loadText(cached.text,cached.name,{persist:false});}).catch(()=>toast('보관한 FACI를 열지 못했습니다. 정상 파일을 선택해 주세요.'));
+// Startup is an explicit choice on the start screen; no automatic document replacement.
 })();

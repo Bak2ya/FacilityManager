@@ -223,7 +223,7 @@ function view(model,d) {
   let minX=0,minY=0,maxX=1000,maxY=700;
   if (pts.length) {minX=Infinity;minY=Infinity;maxX=-Infinity;maxY=-Infinity;for(const p of pts){minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y);}}
   const scale=Math.min(900/Math.max(1,maxX-minX),600/Math.max(1,maxY-minY));
-  const matrix=[scale,0,0,scale,500-(maxX+minX)*scale/2,350-(maxY+minY)*scale/2];
+  const matrix=[scale,0,0,-scale,500-(maxX+minX)*scale/2,350+(maxY+minY)*scale/2];
   const rooms=[];
   for(const layer of layers) for (const o of layer.drawing.source.objects) if(o.type==='space'&&visibleObject(o,layer.filter)) {
     const id=o.spaceUuid||key('unlinked-legacy',layer.drawing.id,o.id),space=model.spaces.get(id),m=multiply(matrix,layer.matrix);

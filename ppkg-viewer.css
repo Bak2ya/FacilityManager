@@ -1,5 +1,5 @@
 .ppkg-technical{pointer-events:none}
-.ppkg-wall{stroke:var(--drawing-wall);fill:none;stroke-linecap:butt;stroke-linejoin:round}
+.ppkg-wall{stroke:var(--drawing-wall);fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-width:2.2}
 .ppkg-line,.ppkg-door,.ppkg-window,.ppkg-component,.ppkg-swing,.ppkg-shutter{fill:none;vector-effect:non-scaling-stroke;stroke:var(--drawing-ink);stroke-width:1}
 .ppkg-swing{stroke:var(--drawing-door-arc);stroke-width:.65}
 .ppkg-window{stroke:var(--drawing-window)}

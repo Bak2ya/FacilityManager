@@ -49,7 +49,7 @@ function withSources(doc,sources){
  for(const space of model.spaces.values())if(space.spaceUuid&&!known.has(space.spaceUuid)){next.public.spaces.push(newSpace(space));known.add(space.spaceUuid);}
  for(const drawing of model.drawings.values()){
   next.public.equipmentByDrawing[drawing.id]??=[];
-  next.public.placementFrames[drawing.id]??={kind:'view-1000x700-v1',matrix:P.view(model,drawing).matrix};
+  next.public.placementFrames[drawing.id]??={kind:'view-1000x700-v2',matrix:P.view(model,drawing).matrix};
  }
  return{document:next,model};
 }
@@ -68,8 +68,9 @@ async function recoveryWrap(doc,keys){
  return token;
 }
 function tokenBytes(text){const match=String(text).match(/Key:\s*([A-Za-z0-9_-]{43})/),token=match?match[1]:String(text).trim();if(!/^[A-Za-z0-9_-]{43}$/.test(token))throw new Error('복구키 형식이 올바르지 않습니다.');return bytes(token.replace(/-/g,'+').replace(/_/g,'/')+'=');}
-async function create({sources=[],organization='',ownerName,password}){
- if(!ownerName?.trim()||!password)throw new Error('최상위 관리자 이름과 암호가 필요합니다.');
+async function create({sources=[],organization='',ownerName,password,adminPassword}){
+ if(!organization.trim()||!ownerName?.trim()||!password||!adminPassword)throw new Error('기관명, 일반 관리자 암호, 최상위 관리자 담당자명과 암호가 모두 필요합니다.');
+ if(password===adminPassword)throw new Error('일반 관리자와 최상위 관리자 암호는 서로 달라야 합니다.');
  const now=new Date().toISOString(),ownerId='owner-'+id();
  let doc={format:FORMAT,schemaVersion:SCHEMA,id:id(),revision:1,createdAt:now,updatedAt:now,app:clone(app()),drawings:{sources:[]},public:emptyPublic(organization),history:{events:[],approvalSchemaVersion:1},crypto:{kdf:'PBKDF2-HMAC-SHA256',iterations:ITERATIONS,authSalt:b64(random(16)),ownerId,credentials:[]},sections:{}};
  doc=withSources(doc,sources).document;
@@ -77,6 +78,8 @@ async function create({sources=[],organization='',ownerName,password}){
  doc.crypto.credentials.push(await credential(doc,{id:ownerId,password,keys}));
  const secure={roomSecurity:{}},admin={accounts:[{id:ownerId,displayName:ownerName.trim(),level:'admin',canManageAdmins:true,active:true,createdAt:now}],changeLog:[]};
  doc.history.events.push({id:id(),type:'document-created',recordedAt:now,effectiveAt:null,sourceRevision:null});
+ const sharedId='admin-'+id();doc.crypto.credentials.push(await credential(doc,{id:sharedId,password:adminPassword,keys}));
+ admin.accounts.push({id:sharedId,displayName:'공유 관리자',shared:true,level:'admin',canManageAdmins:false,active:true,createdAt:now});
  const recoveryKey=await recoveryWrap(doc,keys);doc=await seal(doc,doc.public,secure,admin,keys,{increment:false});
  return{document:doc,keys,secure,admin,recoveryKey};
 }
@@ -89,6 +92,9 @@ function validatePublic(pub,model){
   for(const k of ['areaM2','areaPyeong','capacity'])if(r[k]!=null&&(!Number.isFinite(r[k])||r[k]<0))throw new Error('등록 면적 또는 수용인원이 올바르지 않습니다.');
   if(r.capacity!=null&&!Number.isInteger(r.capacity))throw new Error('수용인원은 0 이상의 정수여야 합니다.');
   ids.add(r.id);uuids.add(r.spaceUuid);
+ }
+ for(const [drawingId,frame] of Object.entries(pub.placementFrames)){
+  const m=frame?.matrix;if(!model.drawings.has(drawingId)||!['view-1000x700-v1','view-1000x700-v2'].includes(frame?.kind)||!Array.isArray(m)||m.length!==6||!m.every(Number.isFinite)||Math.abs(m[0]*m[3]-m[1]*m[2])<1e-15)throw new Error('설비 배치 기준이 올바르지 않습니다.');
  }
  for(const [drawingId,items] of Object.entries(pub.equipmentByDrawing)){
   if(!model.drawings.has(drawingId)||!Array.isArray(items))throw new Error('설비의 도면 연결이 올바르지 않습니다.');

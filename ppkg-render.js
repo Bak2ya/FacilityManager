@@ -22,7 +22,8 @@ function wall(w,openings){
 }
 function opening(o,own){
   const host=own.get(o.wallId),p=C.wallPoint(host,o.t),w=o.width,h=w/2;
-  let body='',kind=o.doorType||'hingedSingle';
+  const info=root.FacilityPpkgVersions?.door(o)||{mechanism:o.doorType||'hingedSingle'};
+  let body='',kind=info.mechanism;
   const side=(o.swingSide??o.swing??1)>=0?1:-1;
   const leaf=(x,len,dir,doubleActing=false)=>{
     const y=side*len;
@@ -30,7 +31,7 @@ function opening(o,own){
   };
   if(o.type==='window') body=line({x:-h,y:-35},{x:h,y:-35},'ppkg-window')+line({x:-h,y:35},{x:h,y:35},'ppkg-window')+line({x:-h,y:-host.thickness/2||-75},{x:-h,y:host.thickness/2||75},'ppkg-window')+line({x:h,y:-host.thickness/2||-75},{x:h,y:host.thickness/2||75},'ppkg-window');
   else if(/shutter/i.test(kind)) body=`<rect class="ppkg-shutter" x="${n(-h)}" y="-45" width="${n(w)}" height="90"/>`+line({x:-h,y:0},{x:h,y:0},'ppkg-door');
-  else if(/sliding|pocket|overlap/i.test(kind)) {
+  else if(/sliding|pocket|overlap|bypass/i.test(kind)) {
     const sign=o.slideDirection===-1?-1:1;
     body=line({x:-h,y:-45},{x:0,y:-45},'ppkg-door')+line({x:0,y:45},{x:h,y:45},'ppkg-door')+`<path class="ppkg-swing" d="M ${n(-h)} 120 H ${n(h)} m ${n(-sign*w*.13)} -60 l ${n(sign*w*.13)} 60 l ${n(-sign*w*.13)} 60"/>`;
   } else if(/fold/i.test(kind)) {
@@ -40,23 +41,52 @@ function opening(o,own){
   } else if(/Double$/i.test(kind)) {
     const split=Math.max(.1,Math.min(.9,o.doubleLeafSplit??.5));body=leaf(-h,w*split,1,/doubleActing/i.test(kind))+leaf(h,w*(1-split),-1,/doubleActing/i.test(kind));
   } else body=o.hinge==='end'?leaf(h,w,-1,/doubleActing/i.test(kind)):leaf(-h,w,1,/doubleActing/i.test(kind));
-  return `<g class="ppkg-opening" data-opening="${esc(o.type)}" data-door-type="${esc(kind)}" transform="translate(${n(p.x)} ${n(p.y)}) rotate(${n(p.angle*180/Math.PI)})">${body}</g>`;
+  return `<g class="ppkg-opening" data-opening="${esc(o.type)}" data-door-type="${esc(o.doorType||kind)}" data-door-mechanism="${esc(kind)}" data-fire-protection="${esc(info.protection)}" data-fire-rating="${esc(info.rating)}" transform="translate(${n(p.x)} ${n(p.y)}) rotate(${n(p.angle*180/Math.PI)})">${body}</g>`;
 }
 function object(o,own){
   if(o.type==='space')return '';
   if(o.type==='wall')return wall(o,[...own.values()].filter(v=>['door','window'].includes(v.type)&&v.wallId===o.id));
   if(o.type==='door'||o.type==='window')return opening(o,own);
-  if(o.type==='line')return line(o.a,o.b);
-  if(o.type==='stair'){
-    const p=o.polygon;let steps='';const count=Math.max(2,Math.min(80,o.treadCount||12));
-    if(p.length===4) for(let i=1;i<count;i++){const t=i/count;steps+=line({x:p[0].x+(p[3].x-p[0].x)*t,y:p[0].y+(p[3].y-p[0].y)*t},{x:p[1].x+(p[2].x-p[1].x)*t,y:p[1].y+(p[2].y-p[1].y)*t});}
-    if(p.length===4){const a={x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2},b={x:(p[2].x+p[3].x)/2,y:(p[2].y+p[3].y)/2},dir=o.upDirection===-1?-1:1,from=dir>0?a:b,to=dir>0?b:a,dx=to.x-from.x,dy=to.y-from.y,len=Math.hypot(dx,dy)||1,tip={x:from.x+dx*.8,y:from.y+dy*.8},tail={x:from.x+dx*.2,y:from.y+dy*.2};steps+=line(tail,tip)+line(tip,{x:tip.x-dx*.08-dy/len*80,y:tip.y-dy*.08+dx/len*80})+line(tip,{x:tip.x-dx*.08+dy/len*80,y:tip.y-dy*.08-dx/len*80});}
-    return `<g data-object-type="stair"><polygon class="ppkg-component" points="${pts(p)}"/>${steps}</g>`;
+  if(o.type==='line')return o.geometry==='arc'? `<path class="ppkg-line" d="${arc(o)}"/>`:line(o.a,o.b);
+  if(o.type==='cadCircle')return `<circle class="ppkg-component" cx="${n(o.center.x)}" cy="${n(o.center.y)}" r="${n(o.radius)}"/>`;
+  if(o.type==='cadPolyline')return root.FacilityPpkgVersions.polylineEdges(o).map(e=>e.geometry==='arc'?`<path class="ppkg-component" d="${arc(e)}"/>`:line(e.a,e.b,'ppkg-component')).join('');
+  if(o.type==='stair') {
+    const p=o.polygon, frame=root.FacilityPpkgVersions?.stair(o);
+    const vectors=[];
+    let label='';
+    if(frame) {
+      const {width,length,count,point,direction,rotation,u,v}=frame;
+      const step=length/count;
+      for(let i=1;i<count;i++)vectors.push(line(point(0,step*i),point(width,step*i)));
+      const forward=direction>0, from=point(width/2,length*(forward?.18:.82)), tip=point(width/2,length*(forward?.82:.18));
+      const head=Math.min(width*.16,length*.08);
+      vectors.push(line(from,tip));
+      for (const side of [-1,1]) vectors.push(line(tip,{x:tip.x-v.x*head*direction+u.x*head*.6*side,y:tip.y-v.y*head*direction+u.y*head*.6*side}));
+      if(frame.label) {
+        const slot=Math.min(count-1,Math.floor(count*(forward?.82:.18))), anchor=point(width*.78,(slot+.5)*step);
+        label=`<text class="ppkg-annotation" data-stair-label="${frame.label}" transform="translate(${n(anchor.x)} ${n(anchor.y)}) rotate(${n(rotation)}) scale(1 -1)" font-size="${n(Math.min(180,width*.12,length*.04,step*.65))}">${frame.label}</text>`;
+      }
+    }
+    return `<g data-object-type="stair" data-arrow-direction="${frame?.direction??''}"><polygon class="ppkg-component" points="${pts(p)}"/>${vectors.join('')}${label}</g>`;
   }
   if(o.type==='component')return `<g data-object-type="component" transform="translate(${n(o.point.x)} ${n(o.point.y)}) rotate(${n(o.rotation||0)}) scale(${n((o.scaleX??1)*(o.mirrorX?-1:1))} ${n((o.scaleY??1)*(o.mirrorY?-1:1))})">${o.componentDefinition.paths.map(p=>`<${p.closed?'polygon':'polyline'} class="ppkg-component" points="${pts(p.points)}"/>`).join('')}</g>`;
   if(o.type==='cadText')return `<text class="ppkg-annotation" transform="translate(${n(o.point.x)} ${n(o.point.y)}) rotate(${n(o.rotation||0)}) scale(1 -1)" x="0" y="0" font-size="${n(o.height||200)}">${esc(o.text)}</text>`;
-  if(o.type==='dimension'){const mid={x:(o.p1.x+o.p2.x)/2,y:(o.p1.y+o.p2.y)/2};return line(o.p1,o.p2)+`<text class="ppkg-annotation" transform="translate(${n(mid.x)} ${n(mid.y+50)}) scale(1 -1)" x="0" y="0" font-size="150">${esc(o.text??Math.round(Math.hypot(o.p2.x-o.p1.x,o.p2.y-o.p1.y)))}</text>`;}
+  if(o.type==='dimension'){
+    const {a,b,from,to,length}=C.dimensionPoints(o,own);
+    const mid={x:(from.x+to.x)/2,y:(from.y+to.y)/2};
+    return line(a,from)+line(b,to)+line(from,to)+`<text class="ppkg-annotation" transform="translate(${n(mid.x)} ${n(mid.y+50)}) scale(1 -1)" font-size="150" text-anchor="middle">${esc(o.text??Math.round(length))}</text>`;
+  }
   return '';
+}
+function styledObject(o,own,styles){
+  const info=o.type==='door'?root.FacilityPpkgVersions?.door(o):null;
+  const category=info?.protection||o.planNature||(o.type==='door'||o.type==='window'||o.type==='wall'?o.type:null);
+  const style=styles?.[category];
+  const markup=object(o,own);
+  if (!style||!markup) return markup;
+  const color=style.color||'var(--drawing-ink)';
+  const pattern=style.pattern==='dashed'?'8 5':style.pattern==='dotted'?'1 4':'none';
+  return `<g class="ppkg-object-style" style="--ppkg-object-color:${esc(color)};--ppkg-object-dash:${pattern}">${markup}</g>`;
 }
 function markup(view,options={}){
   const selected=options.selected||new Set(),prefs=options.labels||{roomName:true},links=options.links||new Map();
@@ -69,8 +99,8 @@ function markup(view,options={}){
   }).join('');
   const layers=enabledLayers.map(l=>{
     const own=new Map(l.drawing.source.objects.map(o=>[o.id,o]));
-    const objects=l.drawing.source.objects.filter(o=>C.visibleObject(o,l.filter)&&(!['door','window'].includes(o.type)||options.doors!==false)&&(!['component','stair'].includes(o.type)||options.objects!==false));
-    return `<g class="ppkg-technical" data-drawing-id="${esc(l.drawing.sourceId)}" opacity="${n(l.opacity)}" transform="matrix(${C.multiply(view.matrix,l.matrix).map(n).join(' ')})">${objects.map(o=>object(o,own)).join('')}</g>`;
+    const objects=l.drawing.source.objects.filter(o=>C.visibleObject(o,l.filter,l.drawing)&&(!['door','window'].includes(o.type)||options.doors!==false)&&(!['component','stair'].includes(o.type)||options.objects!==false));
+    return `<g class="ppkg-technical" data-drawing-id="${esc(l.drawing.sourceId)}" opacity="${n(l.opacity)}" transform="matrix(${C.multiply(view.matrix,l.matrix).map(n).join(' ')})">${objects.map(o=>styledObject(o,own,l.drawing.styles)).join('')}</g>`;
   }).join('');
   return rooms+layers;
 }

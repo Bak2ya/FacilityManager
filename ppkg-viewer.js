@@ -7,7 +7,7 @@ let session=null,active=false,legacySelection=null,busy=false,ppkgCacheReady=fal
 const base={currentBuilding,currentFloor,allRooms,populateSelectors,populateFloors,changeBuilding,changeFloor,renderMap,renderDetails,fitView,showRoomQuickPopover,renderMobileMenu,openSearch,openPrint,loadContainer,resetDataConnection,syncBuild17DataUi,handleSecureButton,handleAdminButton,openFacmapPicker,readFacmapFile,beginRoomEdit,openRoomEditor,openConstructionModal,openEquipmentModal,prepareOfflineUse,cachedFacilityDataReady,refreshOfflineReadyUi};
 const legacyOfflineNote=$('#offlineReadyNote').textContent;
 const esc=R.esc;
-function viewFor(id){if(!viewCache.has(id)&&session?.model.drawings.has(id)){const view=C.view(session.model,session.model.drawings.get(id));viewCache.set(id,viewAdapter?viewAdapter(view):view);}return viewCache.get(id);}
+function viewFor(id){if(!viewCache.has(id)&&session?.model.drawings.has(id)){const view=C.view(session.model,session.model.drawings.get(id));view.label=drawingLabel(session.model.drawings.get(id));viewCache.set(id,viewAdapter?viewAdapter(view):view);}return viewCache.get(id);}
 function linksFor(f){if(window.FacilityFaci?.active)return window.FacilityFaci.linksFor(f);return new Map((f?.rooms||[]).map(r=>[r.id,C.findManagementLink(state.pub,r._ppkg)]));}
 function sync(){
   document.body.classList.toggle('ppkg-mode',active);
@@ -18,6 +18,7 @@ function sync(){
   $('#ppkgReturnBtn').disabled=active&&!state.container;
   $('#floorSelect').setAttribute('aria-label',active?'도면 선택':'층 선택');
   $('#buildingSelect').setAttribute('aria-label','건물 선택');
+  $('#ppkgHistoryBtn').hidden=!session||![...session.model.drawings.values()].some(d=>d.version);
   const f=active?currentFloor():null,d=active?session.model.drawings.get(state.floorId):null;
   const stat=$('#ppkgStatus');
   if(active){
@@ -36,7 +37,8 @@ function activate(){
   if(!session)return;
   if(!active)legacySelection={buildingId:state.buildingId,floorId:state.floorId,selected:[...state.selectedRoomIds],transform:{...state.transform}};
   active=true;state.editMode=false;state.panelMode='browse';state.roomEditDraft=null;state.selectedElement=null;
-  state.buildingId=session.model.buildings[0]?.id;state.floorId=session.model.buildings[0]?.drawings[0]?.id;
+  const initial=session.model.buildings.find(b=>b.drawings.some(d=>d.operational))||session.model.buildings[0];
+  state.buildingId=initial?.id;state.floorId=preferredDrawing(initial)?.id;
   state.selectedRoomIds.clear();hideRoomQuickPopover();sync();populateSelectors();fitView();renderAll();
 }
 function showLegacy(link=null){
@@ -54,24 +56,60 @@ async function importFiles(files){
     const additions=[];
     for(const file of files){
       if(file.size>50*1024*1024)throw new Error('PPKG 파일이 50MB를 초과합니다.');
-      const document=JSON.parse(await readFacilityDataFile(file));C.validate(document);
+      const document=JSON.parse(await readFacilityDataFile(file));await window.FacilityPpkgVersions.verify(document);
       additions.push({name:file.name,document});
     }
     if(!additions.length)return;
-    const sources=[...(session?.sources||[])];
-    for(const item of additions)if(!sources.some(s=>C.canonical(s.document)===C.canonical(item.document)))sources.push(item);
-    const model=C.makeModel(sources); // Stage the whole batch before touching live selection or management data.
     if(targetDocumentId!==window.FacilityFaci?.documentId)throw new Error('가져오는 동안 관리 문서가 바뀌었습니다. 다시 선택해 주세요.');
-    if(window.FacilityFaci?.active)window.FacilityFaci.acceptSources(sources,model);
-    session={sources,model};ppkgCacheReady=false;viewCache=new Map();activate();window.FacilityWorkspace?.enterWorkspace();refreshOfflineReadyUi();
+    let sources,model;
+    if(window.FacilityFaci?.active) {
+      const staged=window.FacilityFaci.acceptSources(additions);
+      sources=staged.document.drawings.sources;
+      model=staged.model;
+    } else {
+      sources=[...(session?.sources||[])];
+      for(const item of additions) if(!sources.some(s=>sameSource(s.document,item.document))) sources.push(item);
+      window.FacilityFaciDrawings.validateArchive(sources);
+      model=C.makeModel(sources);
+    }
+    const hasVersion=additions.some(s=>s.document.schemaVersion===2);
+    const keepSelection=window.FacilityFaci?.active&&hasVersion;
+    replaceView(sources,model,keepSelection);
+    window.FacilityWorkspace?.enterWorkspace();
+    refreshOfflineReadyUi();
     $('#ppkgImportError').textContent='';
-    toast(`PPKG 도면을 열었습니다. 건물 ${model.buildings.length} · 도면 ${model.drawings.size} · 공간 ${model.spaces.size}`);
+    toast(hasVersion&&window.FacilityFaci?.active?'PPKG2 후보를 추가했습니다. 도면 이력에서 비교·승인하세요.':`PPKG 도면을 열었습니다. 건물 ${model.buildings.length} · 도면 ${model.drawings.size} · 공간 ${model.spaces.size}`);
   }catch(e){
     const message=e instanceof SyntaxError?'JSON 문서로 읽을 수 없는 PPKG입니다.':e.message;
     $('#ppkgImportError').textContent=message;
     openModal('PPKG를 열지 못했습니다',`<p>${esc(message)}</p><p class="smallText muted">현재 도면과 시설관리 데이터는 유지됩니다.</p>`,'<button class="btn primary" id="ppkgErrorClose">확인</button>');
     $('#ppkgErrorClose').onclick=closeModal;
   }finally{busy=false;$('#ppkgInput').value='';}
+}
+function sameSource(a,b) {
+  return a.schemaVersion===2&&b.schemaVersion===2?a.packageId===b.packageId&&a.packageRevision===b.packageRevision:C.canonical(a)===C.canonical(b);
+}
+function preferredDrawing(building){
+  return building?.drawings.find(d=>d.operational)||building?.drawings.find(d=>d.sourceStatus==='current')||building?.drawings[0];
+}
+function drawingLabel(d) {
+  const name=d.source.name||'이름 없는 도면';
+  if(!d.version)return d.operational?name:name+' · 이전 운영';
+  const labels={current:'PieniPlan 현재',past:'PieniPlan 과거',planned:'PieniPlan 예정',draft:'PieniPlan 초안'};
+  const app=window.FacilityFaci?.active;
+  const held=app&&state.container.drawings.reviews?.[d.id]?.status==='held';
+  const past=app&&state.container.drawings.operationalByLevel?.[d.levelKey]?.previous.includes(d.id);
+  const local=app?(d.operational?'운영':past?'이전 운영':held?'보류':'미승인')+' · ':'';
+  const duplicates=[...session.model.drawings.values()].some(other=>other!==d&&other.version&&other.packageId===d.packageId&&other.sourceId===d.sourceId&&other.record.revision===d.record.revision);
+  const received=duplicates?' · '+d.packageRevision.slice(0,8):'';
+  return `${name} · ${local}${labels[d.sourceStatus]}${d.version.appliedDate?' '+d.version.appliedDate:''} · r${d.record.revision}${received}`;
+}
+function replaceView(sources,model,keepSelection=false){
+  const canKeep=keepSelection&&active&&model.drawings.has(state.floorId);
+  session={sources,model};ppkgCacheReady=false;viewCache=new Map();
+  if(!canKeep){activate();return;}
+  populateSelectors();
+  renderAll();
 }
 currentBuilding=function(){return active?session?.model.buildings.find(b=>b.id===state.buildingId):base.currentBuilding();};
 currentFloor=function(){return active?viewFor(state.floorId):base.currentFloor();};
@@ -87,18 +125,57 @@ populateSelectors=function(){
 };
 populateFloors=function(){
   if(!active)return base.populateFloors();
-  for(const id of ['floorSelect','mobileFloor']){const el=$('#'+id);if(el){el.innerHTML=(currentBuilding()?.drawings||[]).map(d=>`<option value="${esc(d.id)}">${esc(d.source.name||'이름 없는 도면')} · ${esc(d.level?.name||'층 미지정')}</option>`).join('');el.value=state.floorId;}}
+  const drawings=currentBuilding()?.drawings||[],groups=new Map();
+  for(const d of drawings) {
+    const group=d.levelKey||'unassigned';
+    if(!groups.has(group))groups.set(group,{name:d.level?.name||'층 미지정',items:[]});
+    groups.get(group).items.push(d);
+  }
+  const option=d=>`<option value="${esc(d.id)}">${esc(d.version?drawingLabel(d):drawingLabel(d)+' · '+(d.level?.name||'층 미지정'))}</option>`;
+  const html=drawings.some(d=>d.version)?[...groups.values()].map(g=>`<optgroup label="${esc(g.name)}">${g.items.map(option).join('')}</optgroup>`).join(''):drawings.map(option).join('');
+  for(const id of ['floorSelect','mobileFloor']){const el=$('#'+id);if(el){el.innerHTML=html;el.value=state.floorId;}}
+
 };
-changeBuilding=function(id){if(!active)return base.changeBuilding(id);state.buildingId=id;changeFloor(currentBuilding()?.drawings[0]?.id);populateSelectors();};
+changeBuilding=function(id){if(!active)return base.changeBuilding(id);state.buildingId=id;changeFloor(preferredDrawing(currentBuilding())?.id);populateSelectors();};
 changeFloor=function(id){if(!active)return base.changeFloor(id);if(!session.model.drawings.has(id))return;state.floorId=id;state.selectedRoomIds.clear();state.roomEditDraft=null;hideRoomQuickPopover();sync();populateFloors();fitView();renderAll();};
 fitView=function(){if(!active)return base.fitView();state.transform={x:0,y:0,scale:1};renderMap();};
 renderMap=function(){
   if(!active)return base.renderMap();
-  const f=currentFloor(),svg=$('#floorSvg');if(!f)return;
+  const f=currentFloor(),svg=$('#floorSvg');if(!f){svg.replaceChildren();return;}
   svg.setAttribute('viewBox','0 0 1000 700');
   svg.innerHTML=`<g id="viewport" transform="translate(${state.transform.x} ${state.transform.y}) scale(${state.transform.scale})">${R.markup(f,{selected:state.selectedRoomIds,labels:roomLabelPrefs,links:linksFor(f),doors:state.layers.doors,objects:state.layers.objects,base:state.layers.cad})}${window.FacilityFaci?.active?window.FacilityFaci.extraMarkup(f):''}</g>`;
+  for(const marker of svg.querySelectorAll('.equipmentIcon')) {
+    const item=f.equipment.find(e=>e.id===marker.dataset.equipmentId);
+    if(!item)continue;
+    marker.setAttribute('role','button');
+    marker.setAttribute('tabindex','0');
+    marker.setAttribute('aria-label',item.label||'설비 정보');
+    const show=event=>{
+      event.stopPropagation();
+      window.FacilityFaci?.showEquipment(item,f.id);
+    };
+    marker.addEventListener('keydown',event=>{if(['Enter',' '].includes(event.key)){event.preventDefault();show(event);}});
+  }
   renderTopMeta();sync();
 };
+const planSvg=$('#floorSvg');
+let pressedMarker=null;
+planSvg.addEventListener('pointerdown',event=>{
+  const marker=event.target.closest?.('.equipmentIcon');
+  if(event.button!==0||!event.isPrimary){pressedMarker=null;return;}
+  pressedMarker=marker?{id:marker.dataset.equipmentId,drawingId:state.floorId,pointerId:event.pointerId}:null;
+},true);
+planSvg.addEventListener('pointerup',event=>{
+  const press=pressedMarker;
+  pressedMarker=null;
+  if(!press||press.pointerId!==event.pointerId||press.drawingId!==state.floorId||state.drag?.moved||state.pointers.size!==1)return;
+  const item=currentFloor()?.equipment.find(x=>x.id===press.id);
+  if(!item)return;
+  event.stopImmediatePropagation();
+  state.pointers.delete(event.pointerId);state.drag=null;state.pinch=null;
+  window.FacilityFaci?.showEquipment(item,press.drawingId);
+},true);
+planSvg.addEventListener('pointercancel',()=>{pressedMarker=null;},true);
 function area(v){return v==null?'미입력':`${Number(v).toFixed(2)}㎡`;}
 function detail(room){
   const s=room._ppkg,link=C.findManagementLink(state.pub,s),m=link.status==='linked'?link.room:null;
@@ -131,14 +208,16 @@ showRoomQuickPopover=function(room,e){
 openSearch=function(){
   if(!active)return base.openSearch();
   openModal('도면 공간 검색','<input id="ppkgSearch" class="searchInput" aria-label="공간명 검색" placeholder="공간명 검색"/><div id="ppkgSearchResults"></div>','<button class="btn" id="ppkgSearchClose">닫기</button>');
-  const draw=()=>{const q=$('#ppkgSearch').value.trim().toLowerCase();const rs=allRooms().filter(r=>(r.name||'').toLowerCase().includes(q)).slice(0,100);$('#ppkgSearchResults').innerHTML=rs.map((r,i)=>`<button class="btn fullBtn" data-ppkg-search="${i}">${esc(r.__building.name)} · ${esc(r.__floor.label)} · ${esc(r.name)}</button>`).join('')||'<p class="smallText muted">일치하는 공간이 없습니다.</p>';
+  const draw=()=>{const q=$('#ppkgSearch').value.trim().toLowerCase();const rs=allRooms().filter(r=>[r.name,r._ppkg?.object.name,r.no,r.roomCode,r.department,r.assignee].some(v=>String(v||'').toLowerCase().includes(q))).slice(0,100);$('#ppkgSearchResults').innerHTML=rs.map((r,i)=>`<button class="btn fullBtn" data-ppkg-search="${i}">${esc(r.__building.name)} · ${esc(r.__floor.label)} · ${esc(r.name)}</button>`).join('')||'<p class="smallText muted">일치하는 공간이 없습니다.</p>';
     $$('[data-ppkg-search]').forEach(b=>b.onclick=()=>{const r=rs[Number(b.dataset.ppkgSearch)];state.buildingId=r.__building.id;state.floorId=r.__floor.id;populateSelectors();fitView();closeModal();selectRoom(r.id);});};
   $('#ppkgSearch').oninput=draw;$('#ppkgSearchClose').onclick=closeModal;draw();$('#ppkgSearch').focus();
 };
 openPrint=function(){
   if(!active)return base.openPrint();
-  const f=currentFloor(),d=session.model.drawings.get(state.floorId),printView={...f,layers:C.layersFor(session.model,d,{print:true})};
-  $('#printRoot').innerHTML=`<div class="printPage"><div class="printHeader"><div class="printTitle">${esc(currentBuilding().name)} · ${esc(f.label)}</div><div class="printMeta">PPKG 도면 · v${VERSION} Build ${BUILD}</div></div><div class="printMap"><svg viewBox="0 0 1000 700">${R.markup(printView,{labels:roomLabelPrefs,links:linksFor(f)})}${window.FacilityFaci?.active?window.FacilityFaci.extraMarkup(f):''}</svg></div><div class="printFooter">시설관리 조회용 · 원본 좌표 mm / 면적 ㎡</div></div>`;
+  const f=currentFloor(),d=session.model.drawings.get(state.floorId);
+  if(!f||!d){toast('출력할 도면을 선택해 주세요.');return;}
+  const printView={...f,layers:C.layersFor(session.model,d,{print:true})};
+  $('#printRoot').innerHTML=`<div class="printPage"><div class="printHeader"><div class="printTitle">${esc(currentBuilding().name)} · ${esc(drawingLabel(d))}</div><div class="printMeta">PPKG 도면 · v${VERSION} Build ${BUILD}</div></div><div class="printMap"><svg viewBox="0 0 1000 700">${R.markup(printView,{labels:roomLabelPrefs,links:linksFor(f)})}${window.FacilityFaci?.active?window.FacilityFaci.extraMarkup(f):''}</svg></div><div class="printFooter">시설관리 조회용 · 원본 좌표 mm / 면적 ㎡</div></div>`;
   $('#dynamicPrintStyle').textContent='@page{size:A4 landscape;margin:0}';
   openModal('도면 출력','<p>현재 도면을 A4 가로로 인쇄하거나 PDF로 저장합니다.</p>','<button class="btn" id="ppkgPrintCancel">취소</button><button class="btn primary" id="ppkgPrintConfirm">인쇄 / PDF 저장</button>');
   $('#ppkgPrintCancel').onclick=closeModal;$('#ppkgPrintConfirm').onclick=()=>{closeModal();window.print();};
@@ -170,11 +249,12 @@ $('#floatingSearchBtn').onclick=openSearch;$('#sideSearchBtn').onclick=openSearc
 sync();
 localGet(CACHE_KEY).then(async cached=>{
   if(!cached?.sources?.length||session)return;
-  try{session={sources:cached.sources,model:C.makeModel(cached.sources)};ppkgCacheReady=true;sync();if(!(await localGet(LOCAL_ACTIVE_KEY))?.text)activate();}
+  try{await window.FacilityFaciDrawings.verifySources(cached.sources);if(session)return;session={sources:cached.sources,model:C.makeModel(cached.sources)};ppkgCacheReady=true;sync();if(!(await localGet(LOCAL_ACTIVE_KEY))?.text)activate();}
   catch{$('#ppkgImportError').textContent='보관한 PPKG를 읽지 못했습니다. 원본 파일을 다시 열어 주세요.';}
 }).catch(()=>{});
 window.FacilityPpkgViewer={importFiles,showLegacy,activate,getView:viewFor,
- setSources(sources){const model=C.makeModel(sources);session={sources:C.clone(sources),model};viewCache=new Map();activate();},
+ setSources(sources,operations){replaceView(sources,C.makeModel(sources,operations));},
+ replaceView,drawingLabel,
  setViewAdapter(adapter){viewAdapter=adapter;viewCache=new Map();},
  get sources(){return session?.sources||[];},get active(){return active;},get model(){return session?.model;}};
 })();

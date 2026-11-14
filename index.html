@@ -440,7 +440,7 @@ html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:g
 
 <div id="app">
   <header class="topbar">
-    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.16.0 · Build 21</div></div>
+    <div class="brand"><div class="brandMark"><img src="icons/icon-32.png" alt="" /></div><div class="brandText">시설관리</div><div class="appVersion">v0.17.0 · Build 22</div></div>
     <div class="locationCompact"><select id="mobileBuilding"></select><select id="mobileFloor"></select></div>
     <div class="topSpacer"></div>
     <div class="topMeta">
@@ -481,7 +481,7 @@ html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:g
     <div class="zoomHUD"><button class="iconBtn" id="zoomInBtn" aria-label="확대"><svg class="mi"><use href="#mi-zoom-in"/></svg></button><button class="iconBtn" id="zoomOutBtn" aria-label="축소"><svg class="mi"><use href="#mi-zoom-out"/></svg></button><button class="iconBtn" id="zoomFitBtn" aria-label="전체 보기"><svg class="mi"><use href="#mi-home"/></svg></button></div>
     <div class="mapHint">드래그 이동 · 휠/핀치 확대 · 공간 클릭/탭</div>
     <div class="dataOverlay" id="dataOverlay">
-      <div class="facilityStart"><div class="startBrand"><img src="icons/icon-32.png" alt=""/><span>FacilityManager</span><span class="smallText muted">v0.16.0 · Build 21</span></div><h1>시설정보를 한곳에서</h1><p class="startIntro">도면과 시설정보를 열고, 필요한 업무를 이어가세요.</p>
+      <div class="facilityStart"><div class="startBrand"><img src="icons/icon-32.png" alt=""/><span>FacilityManager</span><span class="smallText muted">v0.17.0 · Build 22</span></div><h1>시설정보를 한곳에서</h1><p class="startIntro">도면과 시설정보를 열고, 필요한 업무를 이어가세요.</p>
       <section class="startCard startPrimary"><span class="startEyebrow">읽기 / 이어보기</span><h2>시설정보 열기</h2><p>FACI 파일을 선택하면 읽기 모드로 열립니다.</p><div class="startActions"><button class="btn primary" id="openDbBtn">FACI 파일 열기</button><button class="btn" id="continueOpenBtn" hidden>열린 문서 이어보기</button></div><div id="recentFaciInfo" class="recentFaciInfo"></div><div class="startActions"><button class="btn" id="resumeLocalBtn" hidden>브라우저 작업본 이어보기</button><button class="btn" id="reopenRecentBtn" hidden>최근 연 FACI 보관본 열기</button></div></section>
       <div class="startSecondary"><section class="startCard"><h2>수정하기</h2><p>열린 FACI 또는 선택한 파일을 관리자 인증 후 수정합니다.</p><button class="btn" id="startEditBtn">FACI 수정하기</button></section><section class="startCard"><h2>새 시설관리 만들기</h2><p>기관과 관리자를 설정합니다. 도면은 나중에 추가할 수 있습니다.</p><button class="btn" id="createFaciStartBtn">새 FACI 만들기</button></section></div>
       <div class="startBottom"><button class="btn small" id="openPpkgBtn">PPKG 도면만 열기</button><span class="smallText muted">자료는 외부 서버로 전송하지 않습니다.</span></div><input id="ppkgInput" type="file" multiple class="hidden" aria-label="PPKG 도면 파일 선택"/><input id="dbFileInput" type="file" class="hidden" aria-label="시설 데이터 파일 선택"/><div class="smallText muted" id="dbStatus"></div></div>
@@ -503,7 +503,7 @@ html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:g
 
           <div class="sideTabPane active" data-side-pane="query">
             <div class="panelSection"><div class="panelTitle">위치</div><div class="locationGrid"><select id="buildingSelect"></select><select id="floorSelect"></select></div></div>
-            <div class="panelSection"><div class="panelTitle">도면</div><div class="ppkg-controls"><button class="btn" id="ppkgImportBtn">PPKG 도면 추가</button><button class="btn" id="ppkgReturnBtn" hidden>시설 데이터 보기</button></div><button class="btn fullBtn" id="exportPpkgBtn" style="margin-top:7px">도면만 PPKG로 내보내기</button><div id="ppkgStatus" class="ppkg-status" role="status"></div><div id="ppkgImportError" class="ppkg-status" role="alert"></div></div><div class="panelSection"><div class="panelTitle">찾기</div><button class="btn fullBtn" id="sideSearchBtn"><svg class="mi sm"><use href="#mi-search"/></svg>호실·부서·설비 검색</button></div>
+            <div class="panelSection"><div class="panelTitle">도면</div><div class="ppkg-controls"><button class="btn" id="ppkgImportBtn">PPKG 도면 추가</button><button class="btn" id="ppkgReturnBtn" hidden>시설 데이터 보기</button></div><button class="btn fullBtn" id="ppkgHistoryBtn" type="button" hidden>도면 이력 및 승인</button><button class="btn fullBtn" id="exportPpkgBtn" style="margin-top:7px">도면만 PPKG로 내보내기</button><div id="ppkgStatus" class="ppkg-status" role="status"></div><div id="ppkgImportError" class="ppkg-status" role="alert"></div></div><div class="panelSection"><div class="panelTitle">찾기</div><button class="btn fullBtn" id="sideSearchBtn"><svg class="mi sm"><use href="#mi-search"/></svg>호실·부서·설비 검색</button></div>
           </div>
 
           <div class="sideTabPane" data-side-pane="display">
@@ -552,7 +552,7 @@ html[data-layout="mobile"] #app:not(.panel-collapsed) .panelEdgeHandle{display:g
 
 <script>
 'use strict';
-const VERSION='0.16.0', BUILD=21;
+const VERSION='0.17.0', BUILD=22;
 window.FacilityRelease=Object.freeze({version:VERSION,build:BUILD});
 const FACI_SCHEMA='0.1.0';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1504,7 +1504,7 @@ setPanelCollapsed(build15PanelDefault(),{persist:false});build15BindControls();s
 // the user chooses to prepare this device; FACI remains in IndexedDB.
 const OFFLINE_CACHE_PREFIX='facilitymanager-offline-';
 const OFFLINE_CACHE_NAME=`${OFFLINE_CACHE_PREFIX}v${BUILD}`;
-const OFFLINE_CORE_FILES=['index.html','faci-core.js','faci-app.js','faci-workspace.js','faci-workspace.css','ppkg-core.js','ppkg-render.js','ppkg-viewer.js','ppkg-viewer.css','manifest.webmanifest','site-config.json','icons/icon-32.png','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png'];
+const OFFLINE_CORE_FILES=['index.html','faci-core.js','faci-app.js','faci-workspace.js','faci-workspace.css','ppkg-core.js','ppkg-versions.js','faci-drawings.js','faci-drawing-review.js','ppkg-render.js','ppkg-viewer.js','ppkg-viewer.css','manifest.webmanifest','site-config.json','icons/icon-32.png','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png'];
 let offlinePrepareBusy=false;
 function offlineFileUrls(){return OFFLINE_CORE_FILES.map(x=>new URL(x,location.href).href)}
 async function registerFacilityServiceWorker(){if(!('serviceWorker' in navigator)||!window.isSecureContext)return null;try{return await navigator.serviceWorker.register('./service-worker.js',{scope:'./'})}catch(e){console.warn('service worker registration failed',e);return null}}
@@ -1569,10 +1569,13 @@ applySidePanelTab(sidePanelTab,{persist:false});syncRoomLabelControls();
 // ----------------------------------------------------------------------
 </script>
 <script src="ppkg-core.js"></script>
+<script src="ppkg-versions.js"></script>
+<script src="faci-drawings.js"></script>
 <script src="ppkg-render.js"></script>
 <script src="faci-core.js"></script>
 <script src="ppkg-viewer.js"></script>
 <script src="faci-app.js"></script>
 <script src="faci-workspace.js"></script>
+<script src="faci-drawing-review.js"></script>
 </body>
 </html>

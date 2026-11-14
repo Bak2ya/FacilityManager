@@ -3,7 +3,7 @@
 'use strict';
 const FORMAT = 'PieniPlanPlanPackage';
 const CAPABILITIES = new Set(['plan.drawings.v1', 'plan.components.v2', 'plan.door.mechanism.v1']);
-const TYPES = new Set(['wall','door','window','space','stair','component','line','dimension','cadText']);
+const TYPES = new Set(['wall','door','window','space','stair','component','line','dimension','cadText','cadCircle','cadPolyline']);
 const clone = v => JSON.parse(JSON.stringify(v));
 const str = v => typeof v === 'string' && v.trim().length > 0;
 const finite = v => typeof v === 'number' && Number.isFinite(v);
@@ -28,29 +28,36 @@ function polygonAreaM2(p) {
 }
 function validate(pkg) {
   if (!pkg || pkg.format !== FORMAT) fail('PieniPlan PPKG 형식이 아닙니다.');
-  if (pkg.schemaVersion !== 1) fail('지원하지 않는 PPKG schemaVersion입니다. 지원 버전: 1');
+  const version=pkg.schemaVersion, V=root.FacilityPpkgVersions;
+  if (version !== 1 && (version!==2||!V)) fail('지원하지 않는 PPKG schemaVersion입니다. 지원 버전: 1, 2');
   if (!str(pkg.packageId)) fail('PPKG packageId가 없습니다.');
   if (pkg.requiredCapabilities != null && !Array.isArray(pkg.requiredCapabilities)) fail('requiredCapabilities 배열이 올바르지 않습니다.');
-  for (const c of pkg.requiredCapabilities || []) if (!CAPABILITIES.has(c)) fail('미지원 필수 기능: ' + String(c));
-  const extended = (pkg.requiredCapabilities || []).includes('plan.drawings.v1');
-  if (!!pkg.drawingModel !== extended) fail('drawingModel과 plan.drawings.v1 선언이 일치하지 않습니다.');
+  const caps=new Set(pkg.requiredCapabilities||[]);
+  for (const c of caps) {
+    const added=V?.CAPABILITIES.includes(c) && (version===2||![V.VERSION_CAP,V.HISTORY_CAP,V.ANNOTATION_CAP].includes(c));
+    if (!(added||CAPABILITIES.has(c))) fail('미지원 필수 기능: ' + String(c));
+  }
+  const extended = version===2 || caps.has('plan.drawings.v1');
+  if (!!pkg.drawingModel !== extended) fail('drawingModel과 필수 도면 기능 선언이 일치하지 않습니다.');
+  V?.validateStyles(pkg.planObjectStyles,caps);
+  if(version===1)V?.finiteData(pkg);
   if (!Array.isArray(pkg.buildings) || !pkg.buildings.length) fail('건물이 하나 이상 필요합니다.');
   const buildings = new Map(), drawings = new Map(), elements = new Set(), spaces = new Set(), warnings = new Set();
   for (const b of pkg.buildings) {
     if (!str(b.id) || buildings.has(b.id)) fail('건물 ID가 없거나 중복됩니다.');
     buildings.set(b.id,b);
-    if (!Array.isArray(b.drawings) || !b.drawings.length) fail('건물에 도면이 하나 이상 필요합니다.');
+    if (!Array.isArray(b.drawings) || version===1&&!b.drawings.length) fail('건물에 도면이 하나 이상 필요합니다.');
     for (const d of b.drawings) {
       if (!str(d.id) || drawings.has(d.id)) fail('도면 ID가 없거나 중복됩니다.');
       if (!Array.isArray(d.objects)) fail('도면 객체 배열이 없습니다.');
       drawings.set(d.id,{...d,buildingId:b.id});
-      const own = new Map();
+      const own = new Map(), localSpaces=new Set();
       for (const o of d.objects) {
         if (!str(o.id) || elements.has(o.id)) fail('도면 객체 ID가 없거나 중복됩니다.');
         elements.add(o.id); own.set(o.id,o);
-        if (o.floorId !== d.id) fail('객체의 floorId가 소속 도면과 다릅니다.');
-        if (!TYPES.has(o.type)) fail('미지원 도면 객체: ' + String(o.type));
-        for (const n of ['width','thickness','rotation','scaleX','scaleY','t','radius','startAngle','sweep','areaM2','managedAreaM2','manualAreaM2']) {
+        if ((version===2||o.floorId!=null) && o.floorId !== d.id) fail('객체의 floorId가 소속 도면과 다릅니다.');
+        if (!TYPES.has(o.type)||!V&&['cadCircle','cadPolyline'].includes(o.type)) fail('미지원 도면 객체: ' + String(o.type));
+        for (const n of ['width','thickness','rotation','scaleX','scaleY','t','t1','t2','offset','radius','startAngle','sweep','areaM2','managedAreaM2','manualAreaM2']) {
           if (o[n] != null && !finite(o[n])) fail('객체의 ' + n + ' 값이 올바르지 않습니다.');
         }
         if (o.type === 'wall' || o.type === 'line') {
@@ -64,10 +71,11 @@ function validate(pkg) {
         if (o.type === 'space' || o.type === 'stair') assertPolygon(o.polygon,o.type);
         if (o.type === 'space') {
           if (extended && !str(o.spaceUuid)) fail('확장형 공간에 spaceUuid가 없습니다.');
-          if (o.spaceUuid) { if (!str(o.spaceUuid) || spaces.has(o.spaceUuid)) fail('spaceUuid가 중복되거나 올바르지 않습니다.'); spaces.add(o.spaceUuid); }
+          if (o.spaceUuid) { if (!str(o.spaceUuid) || localSpaces.has(o.spaceUuid) || version===1&&spaces.has(o.spaceUuid)) fail('spaceUuid가 중복되거나 올바르지 않습니다.'); spaces.add(o.spaceUuid); localSpaces.add(o.spaceUuid); }
           else warnings.add('일부 기본형 공간은 UUID가 없어 업무정보 연결을 사용하지 않습니다.');
           if (o.invalid) warnings.add('유효하지 않음으로 표시된 공간이 있습니다.');
         }
+        V?.validateObject(o,caps,version);
         if (o.type==='component') {
           assertPoint(o.point,'구성품');
           if (!o.componentDefinition || !Array.isArray(o.componentDefinition.paths)) fail('구성품 2D 정의가 없습니다.');
@@ -77,7 +85,9 @@ function validate(pkg) {
           }
         }
         if (o.type==='cadText') assertPoint(o.point,'주석');
-        if (o.type==='dimension') { assertPoint(o.p1,'치수'); assertPoint(o.p2,'치수'); }
+        if (o.type==='dimension' && !o.wallId) {
+          assertPoint(o.p1||o.a,'치수');assertPoint(o.p2||o.b,'치수');
+        }
         if (o.type==='door' || o.type==='window') {
           if (!(o.width>0) || !finite(o.t) || o.t<0 || o.t>1) fail('문·창의 폭 또는 벽 위 위치가 올바르지 않습니다.');
           if (o.doorModel93) {
@@ -87,18 +97,20 @@ function validate(pkg) {
         }
       }
       for (const o of d.objects) {
-        if (['door','window'].includes(o.type) && own.get(o.wallId)?.type!=='wall') fail('문·창의 호스트 벽을 찾을 수 없습니다.');
-        for (const id of o.wallIds || []) if (own.get(id)?.type!=='wall') fail('공간이 참조하는 벽을 찾을 수 없습니다.');
+        if ((['door','window'].includes(o.type)||o.type==='dimension'&&o.wallId) && own.get(o.wallId)?.type!=='wall') fail('문·창의 호스트 벽을 찾을 수 없습니다.');
+        if (o.wallIds!=null&&!Array.isArray(o.wallIds)) fail('공간 벽 목록이 올바르지 않습니다.');
+        for (const id of o.wallIds || []) if (version===1&&own.get(id)?.type!=='wall') fail('공간이 참조하는 벽을 찾을 수 없습니다.');
       }
       if (d.viewAlignment) {
         const a=d.viewAlignment;
-        if (a.version!==1 || !finite(a.x) || !finite(a.y) || !finite(a.rotation)) fail('도면 정렬 정보가 올바르지 않습니다.');
+        if (a.version!==1 || !finite(a.x) || !finite(a.y) || !finite(a.rotation) || (a.scale!=null && a.scale!==1)) fail('도면 정렬 정보가 올바르지 않습니다.');
       }
       if (d.baseView?.opacity!=null && (!finite(d.baseView.opacity) || d.baseView.opacity<0 || d.baseView.opacity>1)) fail('기준 도면 투명도가 올바르지 않습니다.');
     }
   }
   const dm=pkg.drawingModel;
-  if (extended) {
+  if (version===2) V.validateVersionPackage(pkg,drawings,buildings,caps);
+  else if (extended) {
     if (dm.version!==1 || dm.packageId!==pkg.packageId || !Array.isArray(dm.levels) || !dm.records || Array.isArray(dm.records)) fail('drawingModel 구조가 올바르지 않습니다.');
     const levels=new Map();
     for (const l of dm.levels) {
@@ -125,23 +137,25 @@ function validate(pkg) {
     if (path.has(id)) fail('기준 도면·정렬 참조가 순환합니다.');
     const d=drawings.get(id); if (!d) fail('기준 도면·정렬 참조가 누락되었습니다.');
     const next=new Set(path);next.add(id);
-    for (const ref of new Set([d.baseDrawingId,d.viewAlignment?.referenceFloorId].filter(Boolean))) visit(ref,next);
+    for (const ref of new Set([d.baseDrawingId,version===1?d.viewAlignment?.referenceFloorId:null].filter(Boolean))) visit(ref,next);
   };
   for (const id of drawings.keys()) visit(id);
   if (pkg.omissions?.externalSources?.length || pkg.omissions?.nonPlanElementIds?.length) warnings.add('PPKG에 포함되지 않은 CAD·외부참조가 있습니다.');
   return {extended,warnings:[...warnings],buildings:buildings.size,drawings:drawings.size,spaces:spaces.size,objects:elements.size};
 }
-function makeModel(packages=[]) {
+function makeModel(packages=[],operations=null) {
   const model={packages:[],buildings:[],drawings:new Map(),spaces:new Map(),warnings:[]};
-  const bmap=new Map();
+  const previous=new Set(Object.values(operations||{}).flatMap(op=>op?.previous||[]));
+  const bmap=new Map(), levelMap=new Map(), instances=new Map();
   for (const input of packages) {
     const pkg=input.document||input, report=validate(pkg);
     model.warnings.push(...report.warnings);
     model.packages.push({name:input.name||'PPKG',document:pkg});
+    const isV2=pkg.schemaVersion===2, rows=new Map((pkg.drawingModel?.versions||[]).map(v=>[v.drawingId,v]));
     const local=new Map();
     for (const b of pkg.buildings) for (const d of b.drawings) {
       const origin=pkg.drawingModel?.exchangeScope?.origins?.[d.id];
-      local.set(d.id,key(origin?.packageId||pkg.packageId,origin?.drawingId||d.id));
+      local.set(d.id,isV2?key(pkg.packageId,d.id,pkg.packageRevision):key(origin?.packageId||pkg.packageId,origin?.drawingId||d.id));
     }
     for (const b of pkg.buildings) {
       const bk=key(pkg.packageId,b.id);
@@ -154,21 +168,47 @@ function makeModel(packages=[]) {
           if (canonical(old.source)!==canonical(d)) fail('같은 출처의 변경 도면입니다. 이 빌드는 업데이트 승인을 지원하지 않아 덮어쓰기를 차단했습니다.');
           continue;
         }
-        const entry={id:dk,sourceId:d.id,buildingId:bk,source:d,packageId:pkg.packageId,
+        const version=rows.get(d.id)||null;
+        const level=pkg.drawingModel?.levels?.find(l=>l.id===(version?.levelId||d.levelId))||null;
+        const levelKey=level?key(pkg.packageId,level.id):null;
+        const hiddenLayers=new Set((version?.layers||[]).filter(layer=>!layer.visible).map(layer=>layer.id));
+        const hiddenObjectIds=new Set(Object.entries(version?.assignments||{}).filter(([,layer])=>hiddenLayers.has(layer)).map(([object])=>object));
+        const entry={id:dk,sourceId:d.id,buildingId:bk,source:d,packageId:pkg.packageId,packageRevision:pkg.packageRevision||null,
           origin:pkg.drawingModel?.exchangeScope?.origins?.[d.id]||{packageId:pkg.packageId,drawingId:d.id},
-          level:pkg.drawingModel?.levels?.find(l=>l.id===d.levelId)||null,
+          level,levelKey,version,hiddenObjectIds,operational:version?operations?.[levelKey]?.drawingId===dk:!previous.has(dk),
+          sourceStatus:version?root.FacilityPpkgVersions.sourceStatus(version):null, styles:pkg.planObjectStyles||{},
+          lineage:pkg.drawingModel?.lineage?.filter(e=>e.drawingId===d.id)||[],
+          applicationHistory:pkg.drawingModel?.applicationHistory102?.filter(e=>e.drawingId===d.id)||[],
           record:pkg.drawingModel?.records?.[d.id]||null,baseId:d.baseDrawingId?local.get(d.baseDrawingId):null,
-          alignmentReference:d.viewAlignment?.referenceFloorId?local.get(d.viewAlignment.referenceFloorId):null};
+          alignmentReference:!version&&d.viewAlignment?.referenceFloorId?local.get(d.viewAlignment.referenceFloorId):null};
+        if (levelKey) {
+          if(!levelMap.has(levelKey))levelMap.set(levelKey,{...level,key:levelKey,buildingId:bk,drawings:[]});
+          levelMap.get(levelKey).drawings.push(entry);
+        }
         model.drawings.set(dk,entry);building.drawings.push(entry);
         for (const o of d.objects.filter(o=>o.type==='space')) {
           const sk=o.spaceUuid||key('unlinked-legacy',dk,o.id);
-          if (model.spaces.has(sk)) fail('여러 도면·패키지의 공간 UUID가 충돌합니다. 자동 연결하지 않았습니다.');
-          model.spaces.set(sk,{key:sk,spaceUuid:o.spaceUuid||null,object:o,drawing:entry});
+          const registry=pkg.drawingModel?.spaceRegistry?.[o.spaceUuid];
+          const rootId=registry?.rootObjectId||o.id;
+          const rootDrawing=registry?.instances[rootId]?.drawingId||entry.origin.drawingId;
+          const identity=key(entry.origin.packageId,rootDrawing,rootId);
+          const space={key:sk,spaceUuid:o.spaceUuid||null,object:o,drawing:entry,identity};
+          const known=model.spaces.get(sk);
+          const legacy=known&&(known.drawing.version?space:known);
+          const dated=known&&(known.drawing.version?known:space);
+          const converted=known&&Boolean(known.drawing.version)!==Boolean(version)&&dated.drawing.packageId===legacy.drawing.packageId&&
+            dated.identity===key(legacy.drawing.packageId,legacy.drawing.sourceId,legacy.object.id);
+          if (known && ((!known.drawing.version&&!version)||known.identity!==identity&&!converted||known.drawing.levelKey&&version&&known.drawing.version&&known.drawing.levelKey!==levelKey)) {
+            fail('여러 도면·패키지의 공간 UUID가 충돌합니다. 자동 연결하지 않았습니다.');
+          }
+          if (!known || entry.operational&&!known.drawing.operational) model.spaces.set(sk,space);
+          instances.set(key(dk,o.id),space);
         }
       }
     }
   }
   model.buildings=model.buildings.filter(b=>b.drawings.length);
+  model.levels=levelMap;model.instances=instances;
   model.warnings=[...new Set(model.warnings)];
   return model;
 }
@@ -189,7 +229,8 @@ function layersFor(model,d,options={}) {
   };
   add(d);return layers;
 }
-function visibleObject(o,filter) {
+function visibleObject(o,filter,drawing=null) {
+  if (drawing?.hiddenObjectIds?.has(o.id)) return false;
   if (!filter) return true;
   if (Array.isArray(filter)) return filter.includes(o.layerId);
   return filter[o.layerId]!==false;
@@ -198,11 +239,25 @@ function wallPoint(w,t) {
   if (w.geometry==='arc') {const a=(w.startAngle+w.sweep*t)*Math.PI/180;return {x:w.center.x+w.radius*Math.cos(a),y:w.center.y+w.radius*Math.sin(a),angle:a+(w.sweep>=0?1:-1)*Math.PI/2};}
   return {x:w.a.x+(w.b.x-w.a.x)*t,y:w.a.y+(w.b.y-w.a.y)*t,angle:Math.atan2(w.b.y-w.a.y,w.b.x-w.a.x)};
 }
+function dimensionPoints(o,own) {
+  const wall=o.wallId&&own.get(o.wallId);
+  const a=wall?wallPoint(wall,o.t1??0):o.p1||o.a;
+  const b=wall?wallPoint(wall,o.t2??1):o.p2||o.b;
+  const length=Math.hypot(b.x-a.x,b.y-a.y);
+  const offset=o.offset??0,dx=length?-(b.y-a.y)/length*offset:0,dy=length?(b.x-a.x)/length*offset:0;
+  return {a,b,from:{x:a.x+dx,y:a.y+dy},to:{x:b.x+dx,y:b.y+dy},length};
+}
 function objectPoints(o,own) {
-  if (o.type==='wall') {
+  if (o.type==='dimension') {
+    const {a,b,from,to}=dimensionPoints(o,own);
+    return [a,b,from,to];
+  }
+  if (o.type==='wall'||o.type==='line') {
     if (o.geometry==='arc') return Array.from({length:73},(_,i)=>wallPoint(o,i/72));
     return [o.a,o.b];
   }
+  if (o.type==='cadCircle') return [{x:o.center.x-o.radius,y:o.center.y-o.radius},{x:o.center.x+o.radius,y:o.center.y+o.radius}];
+  if (o.type==='cadPolyline') return root.FacilityPpkgVersions.polylineEdges(o).flatMap(e=>e.geometry==='arc'?Array.from({length:25},(_,i)=>wallPoint(e,i/24)):[e.a,e.b]);
   if (o.polygon) return o.polygon;
   if (o.type==='component') {
     const angle=(o.rotation||0)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
@@ -218,18 +273,18 @@ function view(model,d) {
   const layers=layersFor(model,d),pts=[];
   for (const layer of layers) {
     const own=new Map(layer.drawing.source.objects.map(o=>[o.id,o]));
-    for (const o of layer.drawing.source.objects) if (visibleObject(o,layer.filter)) pts.push(...objectPoints(o,own).map(p=>transform(layer.matrix,p)));
+    for (const o of layer.drawing.source.objects) if (visibleObject(o,layer.filter,layer.drawing)) pts.push(...objectPoints(o,own).map(p=>transform(layer.matrix,p)));
   }
   let minX=0,minY=0,maxX=1000,maxY=700;
   if (pts.length) {minX=Infinity;minY=Infinity;maxX=-Infinity;maxY=-Infinity;for(const p of pts){minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y);}}
   const scale=Math.min(900/Math.max(1,maxX-minX),600/Math.max(1,maxY-minY));
   const matrix=[scale,0,0,-scale,500-(maxX+minX)*scale/2,350+(maxY+minY)*scale/2];
   const rooms=[];
-  for(const layer of layers) for (const o of layer.drawing.source.objects) if(o.type==='space'&&visibleObject(o,layer.filter)) {
-    const id=o.spaceUuid||key('unlinked-legacy',layer.drawing.id,o.id),space=model.spaces.get(id),m=multiply(matrix,layer.matrix);
+  for(const layer of layers) for (const o of layer.drawing.source.objects) if(o.type==='space'&&visibleObject(o,layer.filter,layer.drawing)) {
+    const id=o.spaceUuid||key('unlinked-legacy',layer.drawing.id,o.id),space=model.instances.get(key(layer.drawing.id,o.id)),m=multiply(matrix,layer.matrix);
     rooms.push({id,no:'',name:o.name||'이름 없는 공간',areaM2:o.areaM2??null,geometry:o.polygon.map(p=>{const q=transform(m,p);return[q.x,q.y]}),spaceUuid:o.spaceUuid||null,spaceType:o.spaceType||'',_ppkg:space});
   }
-  return {id:d.id,label:d.source.name||'이름 없는 도면',name:d.source.name||'',width:1000,height:700,rooms,equipment:[],doors:[],windows:[],objects:[],cadReference:null,layers,matrix,scale,bounds:{minX,minY,maxX,maxY}};
+  return {id:d.id,operational:d.operational,version:d.version,label:d.source.name||'이름 없는 도면',name:d.source.name||'',width:1000,height:700,rooms,equipment:[],doors:[],windows:[],objects:[],cadReference:null,layers,matrix,scale,bounds:{minX,minY,maxX,maxY}};
 }
 function findManagementLink(pub,space) {
   if (!space?.spaceUuid || !pub) return {status:'unlinked'};
@@ -243,5 +298,5 @@ function findManagementLink(pub,space) {
   }
   return matches.length===1?{status:'linked',...matches[0]}:{status:matches.length?'ambiguous':'unlinked'};
 }
-root.FacilityPpkg={FORMAT,CAPABILITIES:[...CAPABILITIES],clone,canonical,validate,makeModel,key,multiply,transform,alignment,layersFor,visibleObject,wallPoint,objectPoints,view,findManagementLink,polygonAreaM2};
+root.FacilityPpkg={FORMAT,get CAPABILITIES(){return [...CAPABILITIES,...(root.FacilityPpkgVersions?.CAPABILITIES||[])];},clone,canonical,validate,makeModel,key,multiply,transform,alignment,layersFor,visibleObject,wallPoint,dimensionPoints,objectPoints,view,findManagementLink,polygonAreaM2};
 })(typeof window!=='undefined'?window:globalThis);

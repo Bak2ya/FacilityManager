@@ -92,7 +92,14 @@ addAccount=async function(){
 };
 // Every business mutation entry validates live write authority, including calls from old UI bindings.
 for(const name of ['beginRoomEdit','commitRoomEdit','openRoomEditor','openEquipmentModal','openConstructionModal','toggleAccount','toggleManagePermission','openResetPassword','saveDistributionSettings']){
- const original=window[name];if(typeof original==='function')window[name]=function(...args){if(active()&&state.role!=='admin'){toast('수정 모드에서 관리자 인증이 필요합니다.');return;}return original.apply(this,args);};
+ const original=window[name];if(typeof original==='function')window[name]=function(...args){if(active()&&state.role!=='admin'){toast('수정 모드에서 관리자 인증이 필요합니다.');return;}
+ if(active()&&['beginRoomEdit','commitRoomEdit','openRoomEditor','openEquipmentModal'].includes(name)&&(!currentFloor()?.operational||selectedRoom()?.ppkgReadOnly)){
+  toast('운영 도면에서 공간·설비를 수정해 주세요.');return;
+ }
+ if(active()&&name==='openConstructionModal'&&args[0]&&(!currentFloor()?.operational||selectedRoom()?.ppkgReadOnly)){
+  toast('운영 도면에서 공간 공사 기록을 추가해 주세요.');return;
+ }
+ return original.apply(this,args);};
 }
 const oldLog=logChange;
 logChange=function(target,action,detail=''){

@@ -44,10 +44,12 @@ function emptyPublic(organization=''){
 }
 function newSpace(space){return{id:'room-'+id(),spaceUuid:space.spaceUuid,drawingLink:{spaceUuid:space.spaceUuid,originPackageId:space.drawing.origin.packageId,originDrawingId:space.drawing.origin.drawingId},no:'',name:'',shortName:'',roomCode:'',usage:'',facilityClass:'',department:'',teachingDepartment:'',assignee:'',capacity:null,areaM2:null,areaPyeong:null,areaSource:'미입력',inUse:null,lockType:'키',masterKey:null,keyRing:null,lockVerifiedAt:'',notes:'',fire:{required:null,installed:null,expiry:'',location:'',note:''}};}
 function withSources(doc,sources){
- const next=clone(doc),model=P.makeModel(sources),known=new Set(next.public.spaces.map(r=>r.spaceUuid));
+ const D=root.FacilityFaciDrawings;
+ const next=clone(doc),model=P.makeModel(sources,D?.operations(doc)),known=new Set(next.public.spaces.map(r=>r.spaceUuid));
  next.drawings.sources=clone(sources);
- for(const space of model.spaces.values())if(space.spaceUuid&&!known.has(space.spaceUuid)){next.public.spaces.push(newSpace(space));known.add(space.spaceUuid);}
+ for(const space of model.spaces.values())if(space.drawing.operational&&space.spaceUuid&&!known.has(space.spaceUuid)){next.public.spaces.push(newSpace(space));known.add(space.spaceUuid);}
  for(const drawing of model.drawings.values()){
+  if(!drawing.operational)continue;
   next.public.equipmentByDrawing[drawing.id]??=[];
   next.public.placementFrames[drawing.id]??={kind:'view-1000x700-v2',matrix:P.view(model,drawing).matrix};
  }
@@ -104,7 +106,10 @@ function validatePublic(pub,model){
 async function validate(doc){
  if(doc?.format!==FORMAT||doc.schemaVersion!==SCHEMA||typeof doc.id!=='string'||!Number.isInteger(doc.revision)||doc.revision<1)throw new Error('지원하는 FACI v1 문서가 아닙니다.');
  if(!Array.isArray(doc.drawings?.sources)||doc.crypto?.kdf!=='PBKDF2-HMAC-SHA256'||!Number.isInteger(doc.crypto.iterations)||doc.crypto.iterations<600000||doc.crypto.iterations>5000000||!Array.isArray(doc.crypto.credentials)||!doc.crypto.credentials.length||!doc.crypto.ownerId)throw new Error('FACI 도면·인증 구조가 올바르지 않습니다.');
- const model=P.makeModel(doc.drawings.sources);validatePublic(doc.public,model);
+ const D=root.FacilityFaciDrawings;
+ if(!D&&doc.drawings.sources.some(s=>s.document.schemaVersion===2))throw new Error('PPKG2 검증 모듈이 필요합니다.');
+ const model=P.makeModel(doc.drawings.sources,D?.operations(doc));validatePublic(doc.public,model);
+ if(D){D.validateArchive(doc.drawings.sources);D.validateDecisions(doc,model);}
  if(bytes(doc.crypto.authSalt).length!==16)throw new Error('FACI salt 형식이 올바르지 않습니다.');
  const ids=new Set(),lookups=new Set();
  for(const c of doc.crypto.credentials){if(!c.id||ids.has(c.id)||!c.lookup||lookups.has(c.lookup)||!c.payload?.iv||!c.payload?.ct)throw new Error('계정 ID/암호 식별 정보가 중복되거나 잘못되었습니다.');ids.add(c.id);lookups.add(c.lookup);}
@@ -112,6 +117,7 @@ async function validate(doc){
  const checksum=doc.checksum,copy=clone(doc);delete copy.checksum;
  if(checksum!==await hash(copy))throw new Error('FACI 파일이 손상되었거나 변경되었습니다.');
  const binding=await hash(header(doc));
+ if(D)await D.verifySources(doc.drawings.sources);
  for(const name of ['secure','admin']){const s=doc.sections?.[name];if(s?.boundHash!==binding||!s.ct||bytes(s.iv).length!==12)throw new Error('FACI 보호영역의 문서 연결이 손상되었습니다.');}
  return{model};
 }
@@ -130,7 +136,7 @@ async function recover(doc,token,password){
 }
 // Export original Plan packages only. An unchanged source preserves PieniPlan revisions and hashes exactly.
 function exportSources(doc){
- const allowed=new Set(['format','fileType','schemaVersion','requiredCapabilities','packageId','createdAt','app','buildings','drawingModel','scope','omissions','packageRevision','planObjectStyles']);
+ const allowed=new Set(['format','fileType','schemaVersion','requiredCapabilities','packageId','createdAt','app','buildings','drawingModel','scope','omissions','packageRevision','planObjectStyles','activeDrawingId']);
  return doc.drawings.sources.map(source=>{
   P.validate(source.document);
   for(const k of Object.keys(source.document))if(!allowed.has(k))throw new Error('PPKG 원본에 알 수 없는 최상위 필드가 있어 내보내기를 차단했습니다: '+k);

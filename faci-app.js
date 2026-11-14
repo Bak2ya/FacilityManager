@@ -2,6 +2,7 @@
 (function(){
 'use strict';
 const F=window.FacilityFaciCore,P=window.FacilityPpkg,V=window.FacilityPpkgViewer,esc=escapeHtml;
+const D=window.FacilityFaciDrawings;
 const ACTIVE='activeFaci',PREVIOUS='previousFaci';
 const old={detailHtml,detailTabHtml,roomEditHtml,readDraftField,accountManagerHtml,toggleAccount,toggleManagePermission,openResetPassword,handleAdminButton,handleSecureButton,prepareOfflineUse,cachedFacilityDataReady};
 let lastGood=null,saving=false,loading=false,generation=0,editSerial=0;
@@ -21,8 +22,8 @@ function decorate(view){
   const record=recordFor(drawingRoom._ppkg);if(!record)return drawingRoom;
   // Business edits write to the record; immutable drawing geometry is provided only as a view.
   return new Proxy(record,{
-   get(target,k){if(k==='geometry')return drawingRoom.geometry;if(k==='_ppkg')return drawingRoom._ppkg;return Reflect.get(target,k);},
-   set(target,k,value){if(['geometry','_ppkg','id','spaceUuid','drawingLink'].includes(k))return true;return Reflect.set(target,k,value);},
+   get(target,k){if(k==='geometry')return drawingRoom.geometry;if(k==='ppkgReadOnly')return !view.operational;if(k==='_ppkg')return drawingRoom._ppkg;return Reflect.get(target,k);},
+   set(target,k,value){if(!view.operational||['geometry','_ppkg','id','spaceUuid','drawingLink'].includes(k))return true;return Reflect.set(target,k,value);},
    ownKeys(target){return [...Reflect.ownKeys(target),'geometry'];},
    getOwnPropertyDescriptor(target,k){if(k==='geometry')return{configurable:true,enumerable:true,value:drawingRoom.geometry,writable:false};return Reflect.getOwnPropertyDescriptor(target,k);}
   });
@@ -54,9 +55,9 @@ async function activateDocument(doc,name,{keys=null,secure=null,admin=null,dirty
  const owner=admin?.accounts.find(a=>a.id===doc.crypto.ownerId);
  state.role=keys?'admin':'viewer';state.identity=owner?{id:owner.id,displayName:owner.displayName,canManageAdmins:true}:null;
  state.roomEditDraft=null;state.panelMode='browse';state.selectedElement=null;state.selectedRoomIds.clear();state.undo=[];state.redo=[];state.editMode=false;
- lastGood=F.clone(doc);$('#floorSvg').innerHTML='';V.setViewAdapter(decorate);V.setSources(doc.drawings.sources);
+ lastGood=F.clone(doc);$('#floorSvg').innerHTML='';V.setViewAdapter(decorate);V.setSources(doc.drawings.sources,D.operations(doc));
  const view=doc.public.settings.view;
- if(view&&V.model.drawings.has(view.drawingId)){state.buildingId=view.buildingId;changeFloor(view.drawingId);if(currentFloor()?.rooms.some(r=>r.id===view.roomId))state.selectedRoomIds=new Set([view.roomId]);}
+ if(view&&V.model.drawings.get(view.drawingId)?.operational){state.buildingId=view.buildingId;changeFloor(view.drawingId);if(currentFloor()?.rooms.some(r=>r.id===view.roomId))state.selectedRoomIds=new Set([view.roomId]);}
  window.FacilityWorkspace?.onActivate(doc,{dirty,tracking,fromFile});setDirty(dirty);$('#dataOverlay').classList.add('hidden');updateAuthUi();populateSelectors();renderAll();syncUi();refreshOfflineReadyUi();refreshLatestDbStatus();window.FacilityWorkspace?.sync();
 }
 function syncUi(){
@@ -140,9 +141,29 @@ function recoverUi(){
 function exportPpkgUi(){
  if(!active())return;
  try{
-  const sources=F.exportSources(state.container);
-  openModal('도면만 PPKG로 내보내기','<p class="smallText muted">관리정보·계정·인증·보호정보는 포함하지 않습니다. 여러 원본은 원본 패키지별로 저장하여 ID·범위·리비전을 보존합니다.</p>'+sources.map((s,i)=>`<button class="btn fullBtn" data-ppkg-export="${i}">${esc(s.name)}</button>`).join(''),'<button class="btn" id="faciPpkgClose">닫기</button>');
-  $('#faciPpkgClose').onclick=closeModal;$$('[data-ppkg-export]').forEach(b=>b.onclick=()=>{const s=sources[Number(b.dataset.ppkgExport)];downloadBlob(new Blob([JSON.stringify(s.document,null,2)],{type:'application/json'}),s.name.replace(/\.ppkg$/i,'')+'.ppkg');});
+  const sources=F.exportSources(state.container), selected=V.model?.drawings.get(state.floorId);
+  const save=(document,name)=>downloadBlob(new Blob([JSON.stringify(document,null,2)],{type:'application/json'}),name);
+  const subset=sources.find(s=>s.document.schemaVersion===1&&s.document.drawingModel&&s.document.packageId===selected?.packageId&&s.document.scope.includedDrawingIds.includes(selected.sourceId));
+  const explanation=sources.some(s=>s.document.schemaVersion===2)?'<p class="smallText muted">PPKG2는 도면 버전·계보를 함께 담은 전체 이력으로 내보냅니다.</p>':'';
+  openModal('도면만 PPKG로 내보내기','<p class="smallText muted">도면 원본과 교환 이력을 내보냅니다. FacilityManager 승인, 시설관리 및 인증 자료는 제외됩니다.</p>'+explanation+
+   sources.map((s,i)=>`<button class="btn fullBtn" data-ppkg-export="${i}">${esc(s.name)}${s.document.schemaVersion===2?' · 전체 이력 · '+esc(s.document.packageRevision.slice(0,12)):''}</button>`).join('')+
+   (subset?'<button class="btn fullBtn" id="ppkgExportDrawing">선택 도면만 내보내기 (PPKG1)</button><p id="ppkgExportResult" role="status" class="smallText"></p>':''),'<button class="btn" id="faciPpkgClose">닫기</button>');
+  $('#faciPpkgClose').onclick=closeModal;
+  for(const button of $$('[data-ppkg-export]'))button.onclick=()=>{
+   const s=sources[Number(button.dataset.ppkgExport)];
+   save(s.document,s.name.replace(/\.ppkg$/i,'')+'.ppkg');
+  };
+  const button=$('#ppkgExportDrawing');
+  if(button)button.onclick=async()=>{
+   const status=$('#ppkgExportResult');
+   button.disabled=true;
+   status.textContent='기준 도면과 fingerprint를 확인하는 중입니다.';
+   try{
+    const document=await window.FacilityPpkgVersions.subsetV1(subset.document,selected.sourceId);
+    if(button.isConnected){save(document,'FacilityManager_Drawing.ppkg');status.textContent='선택 도면 파일 저장을 요청했습니다.';}
+   }catch(error){status.textContent=error.message;}
+   finally{button.disabled=false;}
+  };
  }catch(e){toast(e.message);}
 }
 function renderDetails(){
@@ -153,11 +174,27 @@ function renderDetails(){
 }
 detailHtml=function(r){
  if(!active())return old.detailHtml(r);
+ if(!recordFor(r._ppkg))return `<div class="detailHeader"><div class="detailTitle">${esc(r.name)}</div></div><div class="detailBody"><p>도면 면적 ${area(r.areaM2)}</p><p class="smallText muted">연결된 운영 공간 기록이 없습니다.</p></div>`;
  const tabs=[['basic','기본'],['access','출입'],['fire','소방·방재'],['equipment','설비'],['construction','공사 이력'],['assets','재산']];
- return `<div class="detailHeader"><div class="detailHeaderTop"><div><div class="detailTitle">${esc(r.no||r.name||r._ppkg?.object.name||'공간')}</div><div class="detailSub">등록 ${area(r.areaM2)} · 도면 ${area(r._ppkg?.object.areaM2)}</div></div><div class="spacer"></div>${state.role==='admin'&&r.spaceUuid?'<button class="btn small editRoomBtn">편집</button>':''}</div><div class="tabs">${tabs.map(([k,t])=>`<button class="tab ${state.detailTab===k?'active':''}" data-tab="${k}">${t}</button>`).join('')}</div></div><div class="detailBody">${detailTabHtml(r)}</div>`;
+ return `<div class="detailHeader"><div class="detailHeaderTop"><div><div class="detailTitle">${esc(r.no||r.name||r._ppkg?.object.name||'공간')}</div><div class="detailSub">등록 ${area(r.areaM2)} · 도면 ${area(r._ppkg?.object.areaM2)}</div></div><div class="spacer"></div>${state.role==='admin'&&r.spaceUuid&&!r.ppkgReadOnly&&currentFloor()?.operational?'<button class="btn small editRoomBtn">편집</button>':''}</div><div class="tabs">${tabs.map(([k,t])=>`<button class="tab ${state.detailTab===k?'active':''}" data-tab="${k}">${t}</button>`).join('')}</div></div><div class="detailBody">${r.ppkgReadOnly?'<p class="smallText muted">이전·미승인 도면입니다. 업무 속성은 현재 기록을 표시합니다.</p>':''}${readOnlyDetail(r,detailTabHtml(r))}</div>`;
 };
+function readOnlyDetail(room,content){
+ if(!room.ppkgReadOnly && currentFloor()?.operational)return content;
+ const template=document.createElement('template');
+ template.innerHTML=content;
+ template.content.querySelectorAll('.addEquipmentBtn,.addConstructionForRoomBtn,.equipmentEditBtn,.equipmentDeleteBtn').forEach(el=>el.remove());
+ return template.innerHTML;
+}
 detailTabHtml=function(r){
- if(!active()||state.detailTab!=='basic')return old.detailTabHtml(r);
+ if(!active())return old.detailTabHtml(r);
+ if(state.detailTab==='equipment'&&currentFloor()?.operational) {
+  const retained=Object.entries(state.pub.equipmentByDrawing).flatMap(([id,items])=>id===state.floorId?[]:
+    items.filter(item=>item.roomId===r.id).map(item=>({item,drawing:V.model.drawings.get(id)})));
+  const extra=retained.length?`<details class="ppkg-link-info"><summary>다른 도면에서 보존된 설비 ${retained.length}건</summary>
+   <ul class="ppkg-info-list">${retained.map(({item,drawing})=>`<li>${esc(item.label||item.id)} · ${esc(drawing?.source.name||'기존 도면')}</li>`).join('')}</ul></details>`:'';
+  return old.detailTabHtml(r)+extra;
+ }
+ if(state.detailTab!=='basic')return old.detailTabHtml(r);
  const values=[['학교 호실코드',r.roomCode],['실제 호실번호',r.no],['호실명',r.name],['호실약칭',r.shortName],['호실용도',r.usage],['시설구분',r.facilityClass],['관리부서',r.department],['수업사용부서',r.teachingDepartment],['배정',r.assignee],['수용인원',r.capacity],['학교 등록 면적',area(r.areaM2)],['등록 면적(평)',r.areaPyeong],['도면 제공 면적',area(r._ppkg?.object.areaM2)],['기하 계산 면적',area(P.polygonAreaM2(r._ppkg?.object.polygon))],['사용유무',r.inUse==null?'미입력':r.inUse?'사용':'미사용'],['비고',r.notes]];
  return `<dl class="infoGrid">${values.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v==null||v===''?'—':v)}</dd>`).join('')}</dl><details class="ppkg-link-info"><summary>도면 공간 연결</summary>${esc(r.spaceUuid||'UUID 없음 · 업무 연결 불가')}</details>`;
 };
@@ -198,10 +235,49 @@ latestDbPayload=function(){if(!active())throw new Error('FACI 문서가 없습�
 persistCurrentContainer=async function(){if(!active())return;if(state.dirty){if(!(await save({silent:true})))throw new Error('먼저 관리자 권한으로 변경사항을 저장해 주세요.');}else await storage.write(lastGood,null);};
 cachedFacilityDataReady=async()=>active()?!!(await localGet(ACTIVE))?.text:old.cachedFacilityDataReady();
 prepareOfflineUse=async function(){if(!active())return old.prepareOfflineUse();try{await persistCurrentContainer();const reg=await registerFacilityServiceWorker();if(!reg)throw new Error('HTTPS 또는 지원 브라우저가 필요합니다.');await cacheOfflineAppFiles();try{await navigator.storage?.persist?.();}catch{}await refreshOfflineReadyUi();toast('오프라인 사용 준비를 확인했습니다.');}catch(e){toast('오프라인 준비 실패: '+e.message);}};
-window.FacilityFaci={get active(){return active();},get documentId(){return active()?state.container.id:null;},storage,syncUi,renderDetails,showQuick,loadText,save,activateDocument,exportFaci,createUi,placementView,
- linksFor(view){return new Map(view.rooms.map(r=>[r.id,r.spaceUuid?{status:'linked',room:r}:{status:'unlinked'}]));},
+function workingDocument(){
+ return {...state.container,public:F.clone(state.pub)};
+}
+function applyDrawingChange(staged){
+ state.container.drawings=staged.document.drawings;
+ state.container.history=staged.document.history;
+ state.pub.spaces=staged.document.public.spaces;
+ state.pub.equipmentByDrawing=staged.document.public.equipmentByDrawing;
+ state.pub.placementFrames=staged.document.public.placementFrames;
+ state.undo=[];state.redo=[];
+ setDirty();
+}
+function acceptSources(additions) {
+ requireAdmin();
+ if(saving||loading||state.roomEditDraft)throw new Error('저장·열기 또는 공간 편집을 마친 뒤 도면을 추가해 주세요.');
+ const staged=D.stage(workingDocument(),additions);
+ if(staged.document.drawings.sources.length!==state.container.drawings.sources.length)applyDrawingChange(staged);
+ return staged;
+}
+function decideDrawing(drawingId,action,reviewed,expectedDocumentId) {
+ requireAdmin();
+ if(state.container.id!==expectedDocumentId||saving||loading||state.roomEditDraft)throw new Error('현재 문서와 편집 상태를 확인한 뒤 다시 검토해 주세요.');
+ const staged=D.decide(workingDocument(),drawingId,action,{actorId:state.identity.id,reviewed});
+ const drawing=staged.model.drawings.get(drawingId);
+ logChange(drawing.source.name,{approve:'운영 도면 승인',hold:'도면 후보 보류',restore:'이전 운영 도면 복원'}[action],drawing.level?.name||'');
+ applyDrawingChange(staged);
+ V.replaceView(staged.document.drawings.sources,staged.model,true);
+ if(action!=='hold'){
+  const d=staged.model.drawings.get(drawingId);state.buildingId=d.buildingId;changeFloor(drawingId);populateSelectors();
+ }
+}
+function showEquipment(item,drawingId){
+ if(state.floorId!==drawingId||!active())return;
+ const room=state.pub.spaces.find(r=>r.id===item.roomId);
+ const rows=[['이름',item.label],['공간',room?.name||room?.no],['분류',item.subtype],['제조사',item.manufacturer],['모델',item.model],['설치일',item.installedAt],['상태',item.status]];
+ openModal('설비 정보',`<dl class="infoGrid">${rows.map(([name,value])=>`<dt>${esc(name)}</dt><dd>${esc(value||'—')}</dd>`).join('')}</dl>`,
+  '<button class="btn faciEquipmentClose">닫기</button>');
+ $('.faciEquipmentClose').onclick=closeModal;
+}
+window.FacilityFaci={get active(){return active();},get documentId(){return active()?state.container.id:null;},storage,syncUi,renderDetails,showQuick,loadText,save,activateDocument,exportFaci,createUi,placementView,workingDocument,decideDrawing,showEquipment,
+ linksFor(view){return new Map(view.rooms.map(r=>[r.id,recordFor(r._ppkg)?{status:'linked',room:r}:{status:'unlinked'}]));},
  extraMarkup(view){return view.equipment.filter(e=>state.layers[e.type]).map(renderEquipSvg).join('');},
- acceptSources(sources){requireAdmin();if(saving||loading)throw new Error('저장 또는 열기가 끝난 뒤 도면을 추가해 주세요.');const next=F.withSources({...state.container,public:F.clone(state.pub)},sources).document;state.container.drawings=next.drawings;state.pub.spaces=next.public.spaces;state.pub.equipmentByDrawing=next.public.equipmentByDrawing;state.pub.placementFrames=next.public.placementFrames;setDirty();},
+ acceptSources
 };
 $('#createFaciBtn').onclick=createUi;$('#createFaciStartBtn').onclick=createUi;$('#recoverFaciBtn').onclick=recoverUi;$('#exportPpkgBtn').onclick=exportPpkgUi;
 $('#sideSaveBtn').onclick=exportFaci;$('#exportDbBtn').onclick=exportFaci;$('#floatingSecureBtn').onclick=handleSecureButton;$('#sideAdminBtn').onclick=handleAdminButton;$('#offlinePrepareBtn').onclick=prepareOfflineUse;
